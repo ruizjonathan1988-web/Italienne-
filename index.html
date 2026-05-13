@@ -1,0 +1,3519 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<meta name="theme-color" content="#F4EEE4">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Italiennes">
+<title>Italiennes</title>
+<link rel="manifest" href="manifest.json">
+<link href="https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#F4EEE4;--paper-d:#EBE3D4;--paper-dd:#DDD3BF;
+  --ink:#18120A;--ink-2:#3A2A18;--ink-3:#7A6248;--ink-4:#AE9A80;
+  --red:#8A1818;--amber:#A87020;--green:#286838;
+  --line:#C8BAA0;--line-l:#DDD0BC;
+  --hl-me:rgba(255,210,40,.14);--hl-cur:rgba(138,24,24,.06);
+  --shadow:rgba(24,18,10,.14);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden;background:var(--paper)}
+body{font-family:'Crimson Pro',Georgia,serif;color:var(--ink);font-size:18px;line-height:1.65}
+.screen{position:absolute;inset:0;display:none;flex-direction:column;background:var(--paper)}
+.screen.active{display:flex}
+h1,h2,h3{font-family:'IM Fell English',serif;font-weight:400}
+.icon-btn{background:none;border:none;cursor:pointer;color:var(--ink);font-size:1.2rem;padding:.32rem .42rem;border-radius:2px;display:flex;align-items:center;transition:background .15s;flex-shrink:0}
+.icon-btn:active{background:var(--paper-d)}
+.btn{display:inline-flex;align-items:center;gap:.4rem;padding:.4rem .82rem;border:1.5px solid var(--ink-4);border-radius:2px;background:transparent;color:var(--ink);cursor:pointer;font-family:'Courier Prime',monospace;font-size:.74rem;letter-spacing:.06em;text-transform:uppercase;transition:all .15s}
+.btn:active{background:var(--paper-d)}
+.btn.primary{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.btn.red{border-color:var(--red);color:var(--red)}
+.app-header{display:flex;align-items:center;gap:.6rem;padding:.78rem .95rem .68rem;border-bottom:2px solid var(--ink);background:var(--paper);flex-shrink:0}
+.app-header h1{font-size:1.35rem;flex:1}
+
+/* ── LIBRARY ── */
+.lib-toolbar{display:flex;align-items:center;justify-content:space-between;padding:.5rem .95rem;border-bottom:1px solid var(--line-l);flex-shrink:0}
+.lib-count{font-family:'Courier Prime',monospace;font-size:.7rem;color:var(--ink-3)}
+.library-list{flex:1;overflow-y:auto;padding:.45rem .75rem 5rem}
+.library-list::-webkit-scrollbar{display:none}
+.play-card{border:1.5px solid var(--line);border-radius:2px;padding:.75rem .85rem;margin-bottom:.5rem;cursor:pointer;position:relative;background:var(--paper)}
+.play-card:active{border-color:var(--ink-3);background:var(--paper-d)}
+.card-top{display:flex;align-items:flex-start;gap:.45rem}
+.card-title{font-family:'IM Fell English',serif;font-size:1.05rem;flex:1}
+.card-author{font-style:italic;color:var(--ink-3);font-size:.83rem;margin-top:.08rem}
+.card-meta{display:flex;gap:.7rem;flex-wrap:wrap;margin-top:.4rem;font-family:'Courier Prime',monospace;font-size:.67rem;color:var(--ink-4)}
+.card-actions{display:flex;gap:.28rem}
+.fav-btn{background:none;border:none;cursor:pointer;font-size:.95rem;padding:.18rem;flex-shrink:0}
+.card-progress{position:absolute;bottom:0;left:0;right:0;height:2px;background:var(--line-l)}
+.card-progress-fill{height:100%;background:var(--red);border-radius:0 1px 1px 0;transition:width .4s}
+.empty-lib{display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;gap:.8rem;color:var(--ink-3);text-align:center;padding:2rem}
+.empty-lib .sym{font-family:'IM Fell English',serif;font-size:3.8rem;opacity:.18}
+
+/* ── IMPORT ── */
+.import-body{flex:1;overflow-y:auto;padding:.95rem;display:flex;flex-direction:column;gap:1rem}
+.section-label{font-family:'Courier Prime',monospace;font-size:.65rem;text-transform:uppercase;letter-spacing:.14em;color:var(--ink-3);margin-bottom:.45rem;display:flex;align-items:center;gap:.45rem}
+.section-label::after{content:'';flex:1;height:1px;background:var(--line)}
+.dropzone{border:1.5px dashed var(--line);border-radius:2px;padding:1.5rem 1rem;text-align:center;cursor:pointer;background:var(--paper-d);transition:all .2s;user-select:none}
+.dropzone:active,.dropzone.drag{border-color:var(--red);background:rgba(138,24,24,.04)}
+.dz-icon{font-size:1.9rem;margin-bottom:.3rem;display:block}
+.dz-text{color:var(--ink-3);font-size:.83rem}
+.dz-text strong{color:var(--red)}
+.txt-input{width:100%;border:1.5px solid var(--line);border-radius:2px;padding:.4rem .62rem;font-family:'Crimson Pro',serif;font-size:.9rem;background:var(--paper-d);color:var(--ink);outline:none;transition:border .15s}
+.txt-input:focus{border-color:var(--ink-3)}
+textarea.txt-input{min-height:120px;resize:vertical;font-size:.8rem;line-height:1.55;font-family:'Courier Prime',monospace}
+.format-hint{background:var(--paper-d);border-left:3px solid var(--amber);padding:.55rem .82rem;font-size:.77rem;color:var(--ink-2);line-height:1.7}
+.format-hint code{font-family:'Courier Prime',monospace;color:var(--red)}
+
+/* ══ PLAY ══ */
+.play-header{display:flex;align-items:center;gap:.38rem;padding:.48rem .68rem;border-bottom:2px solid var(--ink);background:var(--paper);flex-shrink:0;min-height:44px}
+.play-title-hd{font-family:'IM Fell English',serif;font-size:.86rem;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mode-badge{font-family:'Courier Prime',monospace;font-size:.58rem;text-transform:uppercase;letter-spacing:.1em;color:var(--red);border:1px solid var(--red);padding:.1rem .28rem;border-radius:1px;flex-shrink:0}
+.play-layout{display:flex;flex:1;overflow:hidden;position:relative}
+
+/* ── SIDEBAR ── */
+.play-sidebar{width:255px;flex-shrink:0;border-right:1.5px solid var(--line);background:var(--paper-d);overflow-y:auto;display:flex;flex-direction:column;transition:transform .25s}
+.play-sidebar::-webkit-scrollbar{display:none}
+@media(max-width:640px){
+  .play-sidebar{position:absolute;top:0;left:0;bottom:0;z-index:50;box-shadow:5px 0 20px var(--shadow);transform:translateX(-110%)}
+  .play-sidebar.open{transform:translateX(0)}
+}
+.sb-overlay{display:none;position:fixed;inset:0;background:rgba(24,18,10,.4);z-index:45}
+.sb-overlay.show{display:block}
+.sb-section{border-bottom:1px solid var(--line);padding:.65rem .82rem}
+.sb-label{font-family:'Courier Prime',monospace;font-size:.61rem;text-transform:uppercase;letter-spacing:.14em;color:var(--ink-3);margin-bottom:.45rem}
+.sb-item{display:flex;align-items:center;gap:.48rem;padding:.33rem .36rem;cursor:pointer;border:1px solid transparent;border-radius:1px;transition:all .15s;font-size:.83rem}
+.sb-item:active{background:var(--paper-dd)}
+.sb-item.active{border-color:var(--red);background:rgba(138,24,24,.07);color:var(--red)}
+.sb-item .ico{font-size:.88rem;width:17px;text-align:center;flex-shrink:0}
+.sb-item .stat{margin-left:auto;font-family:'Courier Prime',monospace;font-size:.61rem;color:var(--ink-4)}
+.r-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.scenes-list{display:flex;flex-direction:column;gap:1px;max-height:165px;overflow-y:auto}
+.scenes-list::-webkit-scrollbar{display:none}
+.tts-grid{display:flex;flex-direction:column;gap:.5rem}
+.tts-row{display:flex;align-items:center;gap:.45rem;font-size:.76rem}
+.tts-lbl{color:var(--ink-3);min-width:52px;font-size:.73rem}
+.tts-val{font-family:'Courier Prime',monospace;font-size:.67rem;min-width:28px;text-align:right}
+input[type=range]{flex:1;-webkit-appearance:none;height:2px;background:var(--line);outline:none;cursor:pointer}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:13px;height:13px;border-radius:50%;background:var(--ink);cursor:pointer}
+.voice-sel{font-family:'Courier Prime',monospace;font-size:.63rem;background:var(--paper);border:1px solid var(--line);color:var(--ink);padding:.22rem .32rem;border-radius:1px;outline:none;width:100%;cursor:pointer}
+
+/* ── PLAY MAIN ── */
+.play-main{flex:1;display:flex;flex-direction:column;overflow:hidden;position:relative}
+.scene-nav-bar{display:flex;align-items:center;padding:.26rem .65rem;border-bottom:1px solid var(--line-l);background:var(--paper-d);flex-shrink:0}
+.scene-nav-btn{background:none;border:none;cursor:pointer;padding:.18rem .32rem;font-family:'Courier Prime',monospace;font-size:.68rem;color:var(--red);flex-shrink:0}
+.scene-nav-btn:active{opacity:.6}
+.scene-nav-title{font-family:'IM Fell English',serif;font-size:.86rem;font-weight:700;flex:1;text-align:center;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:0 .25rem}
+.script-wrapper{flex:1;position:relative;overflow:hidden;display:flex;flex-direction:column}
+.script-view{flex:1;overflow-y:auto;padding:.85rem .85rem 6rem 1rem;padding-right:38px;scroll-behavior:smooth}
+.script-view::-webkit-scrollbar{width:3px}
+.script-view::-webkit-scrollbar-thumb{background:var(--line)}
+
+/* ── SCRIPT LINES ── */
+.scene-hd{font-family:'IM Fell English',serif;font-size:.83rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-2);margin:1.7rem 0 .75rem;display:flex;align-items:center;gap:.55rem}
+.scene-hd::before,.scene-hd::after{content:'';flex:1;height:1.5px;background:var(--ink-3)}
+.s-dir{font-family:'IM Fell English',serif;font-style:italic;color:var(--ink-3);font-size:.83rem;padding:.16rem 0 .16rem .55rem;border-left:2px solid var(--line-l);margin:.12rem 0;line-height:1.52}
+.s-line{padding:.52rem .55rem .52rem .75rem;border-left:3px solid transparent;margin-bottom:.04rem;cursor:pointer;border-radius:1px;transition:background .1s,border-color .1s;position:relative}
+.s-line:active{background:rgba(0,0,0,.02)}
+.s-line.current{border-left-color:var(--red);background:var(--hl-cur)}
+.s-line.is-me{border-left-color:var(--amber)}
+.s-line.is-me.current{background:var(--hl-me);border-left-color:var(--amber)}
+.s-line.bookmarked::after{content:'🔖';position:absolute;right:.18rem;top:.32rem;font-size:.6rem}
+.s-role{font-family:'IM Fell English',serif;font-size:.93rem;font-weight:700;margin-bottom:.13rem}
+.s-text{font-size:.96rem;line-height:1.7;color:var(--ink-2)}
+/* Masqué — texte PRÉSENT dans le DOM, rendu invisible par CSS */
+.s-text.masked{background:var(--ink-3);color:transparent!important;border-radius:2px;cursor:pointer;min-height:1.32rem;user-select:none;transition:background .22s,color .22s}
+.s-text.masked.revealed{background:transparent!important;color:var(--ink-2)!important}
+.amorce-cue{font-family:'Courier Prime',monospace;font-size:.7rem;color:var(--ink-3);background:var(--paper-d);padding:.12rem .35rem;border-radius:1px;display:inline-block;border-left:2px solid var(--amber);font-style:italic}
+
+/* ── SCRUBBER ── */
+.scrubber{
+  position:absolute;
+  right:0;top:0;bottom:0;
+  width:40px;
+  touch-action:none;
+  user-select:none;
+  z-index:20;
+  cursor:ns-resize;
+}
+.scrubber-track{
+  position:absolute;
+  right:15px;top:0;bottom:0;
+  width:4px;
+  background:var(--line-l);
+  border-radius:2px;
+}
+.s-tick{
+  position:absolute;left:0;right:0;height:2px;
+  border-radius:1px;pointer-events:none;
+}
+.s-cursor{
+  position:absolute;
+  right:-8px;
+  width:20px;height:20px;
+  background:var(--red);
+  border:3px solid var(--paper);
+  border-radius:50%;
+  transform:translateY(-50%);
+  box-shadow:0 0 0 2px var(--red),0 2px 8px rgba(0,0,0,.4);
+  pointer-events:none;
+  will-change:top;
+}
+.script-view::-webkit-scrollbar{width:0}
+
+
+/* ── KARAOKE ── */
+.karaoke-view{flex:1;display:none;flex-direction:column;align-items:center;justify-content:center;padding:1.8rem 1.4rem;gap:1.5rem;overflow:hidden}
+.karaoke-view.show{display:flex}
+.k-prev,.k-next{opacity:.24;text-align:center;max-width:480px;font-style:italic;font-size:.88rem;line-height:1.62}
+.k-role-lbl{font-family:'Courier Prime',monospace;font-size:.62rem;text-transform:uppercase;letter-spacing:.1em;display:block;margin-bottom:.2rem}
+.k-current{text-align:center;max-width:540px;font-family:'IM Fell English',serif;font-size:1.55rem;line-height:1.6;color:var(--ink)}
+.k-current .k-role-lbl{font-size:.68rem;margin-bottom:.42rem}
+.k-current.my-turn{color:var(--red)}
+.k-current.masked-k{filter:blur(9px);cursor:pointer;transition:filter .25s}
+
+/* ── BOTTOM BAR ── */
+.bottom-bar{position:fixed;bottom:0;left:0;right:0;display:flex;align-items:center;gap:.28rem;padding:.48rem .62rem;background:var(--paper);border-top:2px solid var(--ink);z-index:40}
+.bb-center{display:flex;gap:.26rem;flex:1;justify-content:center;align-items:center}
+.bb-btn{background:none;border:1.5px solid var(--line);border-radius:1px;color:var(--ink);cursor:pointer;width:42px;height:42px;display:flex;align-items:center;justify-content:center;font-size:.9rem;transition:all .15s;flex-shrink:0}
+.bb-btn:active{background:var(--paper-d);border-color:var(--ink-3)}
+.bb-btn.active{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.bb-btn.accent{border-color:var(--red);color:var(--red)}
+.bb-btn.accent.active{background:var(--red);color:var(--paper)}
+.bb-progress{font-family:'Courier Prime',monospace;font-size:.67rem;color:var(--ink-3);white-space:nowrap;min-width:38px;text-align:center}
+
+/* ── SOUFFLEUR ── */
+.souffleur-hint{position:fixed;bottom:60px;left:50%;transform:translateX(-50%) translateY(12px);background:var(--ink-2);color:var(--paper);padding:.42rem 1.1rem;border-radius:17px;font-family:'IM Fell English',serif;font-style:italic;font-size:1.08rem;box-shadow:0 4px 14px var(--shadow);opacity:0;transition:all .24s;pointer-events:none;z-index:55;max-width:80vw;text-align:center}
+.souffleur-hint.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* ── SPEAKING IND ── */
+.speaking-ind{display:inline-flex;gap:2px;align-items:flex-end;margin-left:.32rem;height:13px;vertical-align:middle}
+.speaking-ind span{display:block;width:3px;background:var(--red);border-radius:1px;animation:spw .9s ease-in-out infinite}
+.speaking-ind span:nth-child(1){height:7px}
+.speaking-ind span:nth-child(2){height:13px;animation-delay:.15s}
+.speaking-ind span:nth-child(3){height:5px;animation-delay:.3s}
+@keyframes spw{0%,100%{transform:scaleY(.32)}50%{transform:scaleY(1)}}
+
+/* ── MODAL ── */
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(24,18,10,.5);z-index:100;align-items:flex-end}
+.modal-bg.show{display:flex}
+.modal{background:var(--paper);width:100%;border-top:2px solid var(--ink);border-radius:4px 4px 0 0;max-height:85vh;overflow-y:auto}
+.modal-hd{display:flex;align-items:center;justify-content:space-between;padding:.75rem .95rem;border-bottom:1px solid var(--line);background:var(--paper);position:sticky;top:0;z-index:1}
+.modal-body{padding:.85rem .95rem 2rem}
+.stat-table{width:100%;border-collapse:collapse;font-size:.82rem;margin-bottom:.9rem}
+.stat-table th{font-family:'Courier Prime',monospace;font-size:.62rem;text-transform:uppercase;letter-spacing:.1em;color:var(--ink-3);text-align:left;padding:.32rem .26rem;border-bottom:1.5px solid var(--line)}
+.stat-table td{padding:.32rem .26rem;border-bottom:1px solid var(--line-l);vertical-align:middle}
+.stat-table .num{font-family:'Courier Prime',monospace;text-align:right}
+
+/* ── EDITOR ── */
+#editor-area{flex:1;width:100%;border:none;outline:none;resize:none;font-family:'Courier Prime',monospace;font-size:.8rem;line-height:1.72;background:var(--paper);color:var(--ink);padding:.95rem;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.editor-hint{background:var(--paper-d);border-bottom:1px solid var(--line);padding:.45rem .85rem;flex-shrink:0;font-family:'Courier Prime',monospace;font-size:.64rem;color:var(--ink-3);line-height:1.85}
+
+/* ── NOTES ── */
+.s-line.has-note::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;border-radius:0 1px 1px 0}
+.note-dot{position:absolute;right:.6rem;top:.32rem;width:8px;height:8px;border-radius:50%;cursor:pointer;z-index:2}
+/* ── SEARCH HIGHLIGHT ── */
+.s-text mark{background:rgba(168,112,32,.35);border-radius:1px;padding:0}
+.s-text mark.current-match{background:rgba(168,112,32,.75);color:var(--paper)}
+/* MODE BLANC PROGRESSIF: voir .blanc-word */
+/* ── HEATMAP ── */
+.heatmap-wrap{display:flex;flex-wrap:wrap;gap:3px;margin-top:.6rem}
+.hm-cell{width:26px;height:26px;border-radius:2px;display:flex;align-items:center;justify-content:center;font-family:'Courier Prime',monospace;font-size:.58rem;cursor:pointer;title:''}
+.hm-0{background:var(--line-l);color:var(--ink-3)}
+.hm-1{background:#d4a8a8}
+.hm-2{background:#b87878}
+.hm-3{background:#9a4848;color:var(--paper)}
+.hm-4{background:var(--red);color:var(--paper)}
+.hm-done{background:var(--green);color:var(--paper)}
+/* ── BOUCLE indicator ── */
+.loop-badge{
+  position:fixed;top:48px;right:.6rem;
+  background:var(--amber);color:var(--paper);
+  font-family:'Courier Prime',monospace;font-size:.62rem;
+  padding:.18rem .42rem;border-radius:1px;z-index:60;display:none
+}
+.loop-badge.show{display:block}
+.loading-ovl{display:none;position:fixed;inset:0;background:rgba(244,238,228,.92);z-index:200;align-items:center;justify-content:center;flex-direction:column;gap:.85rem;font-family:'Courier Prime',monospace;font-size:.73rem;color:var(--ink-3);letter-spacing:.08em;text-transform:uppercase}
+.loading-ovl.show{display:flex}
+.loading-bar{width:170px;height:2px;background:var(--line);position:relative;overflow:hidden;border-radius:1px}
+.loading-bar::after{content:'';position:absolute;left:-50%;top:0;width:50%;height:100%;background:var(--red);animation:lbar .88s ease-in-out infinite;border-radius:1px}
+@keyframes lbar{to{left:100%}}
+.loading-sub{font-size:.6rem;color:var(--ink-4)}
+
+/* ── AUTO-CHAIN COUNTDOWN ── */
+.autochain-bar{
+  position:fixed;bottom:56px;left:0;right:0;height:3px;
+  background:var(--line-l);z-index:45;display:none;
+}
+.autochain-bar-fill{
+  height:100%;background:var(--amber);
+  transition:width linear;border-radius:0 2px 2px 0;
+}
+.autochain-bar.show{display:block}
+/* ── PRESET VOIX BOUTONS ── */
+.vp-btn{transition:all .15s;font-family:'Crimson Pro',serif!important;white-space:nowrap}
+.vp-btn:active{transform:scale(.95)}
+.vp-active{box-shadow:0 1px 4px rgba(0,0,0,.2)}
+/* ── QUIZ ── */
+.quiz-wrap{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.quiz-header-bar{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:.55rem .9rem;border-bottom:1px solid var(--line-l);
+  background:var(--paper-d);flex-shrink:0;gap:.5rem;
+}
+.quiz-score-badge{
+  font-family:'Courier Prime',monospace;font-size:.75rem;
+  background:var(--ink);color:var(--paper);
+  padding:.2rem .55rem;border-radius:2px;
+}
+.quiz-progress-bar{height:3px;background:var(--line-l);flex-shrink:0}
+.quiz-progress-fill{height:100%;background:var(--amber);transition:width .4s;border-radius:0 2px 2px 0}
+.quiz-body{flex:1;overflow-y:auto;padding:1rem .9rem 5rem;display:flex;flex-direction:column;gap:.9rem}
+.quiz-cue{
+  background:var(--paper-d);border-left:3px solid var(--line);
+  padding:.55rem .8rem;border-radius:1px;
+  font-family:'IM Fell English',serif;font-style:italic;font-size:.88rem;color:var(--ink-3);
+  line-height:1.6;
+}
+.quiz-cue strong{color:var(--ink-2);font-style:normal}
+.quiz-line-display{
+  font-family:'IM Fell English',serif;font-size:1.15rem;line-height:1.8;
+  padding:.6rem 0;letter-spacing:.01em;
+}
+.quiz-blank{
+  display:inline-block;background:var(--ink-3);border-radius:2px;
+  color:transparent;min-width:2.5rem;height:1.25em;vertical-align:middle;
+  margin:0 .1rem;cursor:pointer;transition:all .2s;
+}
+.quiz-blank.revealed{background:rgba(168,112,32,.2);color:var(--amber);font-style:italic}
+.quiz-blank.correct{background:rgba(40,104,56,.25);color:var(--green)}
+.quiz-blank.wrong{background:rgba(138,24,24,.2);color:var(--red)}
+.quiz-input-row{display:flex;gap:.45rem;flex-shrink:0}
+.quiz-input{
+  flex:1;border:2px solid var(--line);border-radius:2px;
+  padding:.52rem .75rem;font-family:'Crimson Pro',serif;font-size:1rem;
+  background:var(--paper);color:var(--ink);outline:none;
+  transition:border-color .2s;
+}
+.quiz-input:focus{border-color:var(--amber)}
+.quiz-input.correct-input{border-color:var(--green)}
+.quiz-input.wrong-input{border-color:var(--red)}
+.quiz-result{
+  text-align:center;padding:1.2rem .9rem;border-radius:2px;
+  font-family:'IM Fell English',serif;font-size:1.1rem;line-height:1.8;
+  display:none;
+}
+.quiz-result.show{display:block}
+.quiz-result.ok{background:rgba(40,104,56,.12);color:var(--green)}
+.quiz-result.ko{background:rgba(138,24,24,.1);color:var(--red)}
+.quiz-badge{font-size:2rem;display:block;margin-bottom:.3rem}
+.quiz-end-screen{
+  flex:1;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;padding:1.5rem;text-align:center;gap:.9rem;
+}
+.quiz-big-score{font-family:'IM Fell English',serif;font-size:3.5rem;color:var(--red)}
+.quiz-stars{font-size:2.2rem;letter-spacing:.15rem}
+
+/* ── OUTIL 2 : MODE ENFANT ── */
+body.kid-mode{font-size:20px}
+body.kid-mode .bb-btn{width:52px;height:52px;font-size:1.2rem}
+body.kid-mode .sb-item{padding:.5rem .55rem;font-size:1rem;gap:.6rem}
+body.kid-mode .btn{padding:.55rem 1.1rem;font-size:.85rem}
+body.kid-mode .s-role{font-size:1.1rem}
+body.kid-mode .s-text{font-size:1.08rem;line-height:1.85}
+body.kid-mode .icon-btn{font-size:1.45rem;padding:.42rem .52rem}
+body.kid-mode .quiz-blank{min-width:3rem;height:1.5em}
+body.kid-mode .quiz-input{font-size:1.1rem;padding:.65rem .9rem}
+body.kid-mode .bottom-bar{padding:.65rem .7rem}
+#btn-kid-mode.active{color:var(--amber)}
+
+/* ── OUTIL 3 : MINUTEUR ── */
+.timer-display{
+  font-family:'Courier Prime',monospace;font-size:1.05rem;font-weight:700;
+  cursor:pointer;padding:.1rem .4rem;border-radius:2px;
+  transition:color .2s;letter-spacing:.05em;flex-shrink:0;
+}
+.timer-display.running{color:var(--red);animation:tpulse 1s infinite}
+@keyframes tpulse{0%,100%{opacity:1}50%{opacity:.55}}
+.timer-display.stopped{color:var(--ink-3)}
+
+/* ── OUTIL 4 : FIL ROUGE ── */
+.fil-line{
+  padding:.55rem .85rem .55rem 1rem;border-left:3px solid var(--red);
+  cursor:pointer;transition:background .12s;position:relative;
+}
+.fil-line:active{background:var(--paper-d)}
+.fil-line.bookmarked::after{content:'🔖';position:absolute;right:.5rem;top:.4rem;font-size:.65rem}
+.fil-cue{
+  font-size:.76rem;font-family:'IM Fell English',serif;font-style:italic;
+  color:var(--ink-3);margin-bottom:.22rem;line-height:1.5;
+  border-left:2px solid var(--line-l);padding-left:.45rem;
+}
+.fil-text{font-size:.96rem;line-height:1.7;color:var(--ink-2)}
+
+/* ── OUTIL 7 : PARTAGE ── */
+.session-code{
+  font-family:'Courier Prime',monospace;font-size:2.2rem;font-weight:700;
+  letter-spacing:.18em;color:var(--red);text-align:center;
+  padding:.6rem;background:var(--paper-d);border-radius:2px;margin:.6rem 0;
+  cursor:pointer;border:2px solid var(--line);
+}
+.session-code:active{background:var(--paper-dd)}
+
+/* ── OUTIL 9 : GUIDE BIENVENUE ── */
+.welcome-ovl{
+  display:none;position:fixed;inset:0;background:rgba(24,18,10,.6);
+  z-index:300;align-items:flex-end;
+}
+.welcome-ovl.show{display:flex}
+.welcome-card{
+  background:var(--paper);width:100%;border-top:3px solid var(--red);
+  border-radius:6px 6px 0 0;padding:1.4rem 1.2rem 1.8rem;
+  max-height:82vh;overflow-y:auto;
+}
+.welcome-step-icon{font-size:2.8rem;display:block;margin-bottom:.55rem}
+.welcome-dots{display:flex;gap:.45rem;justify-content:center;margin:.9rem 0 .3rem}
+.welcome-dot{width:8px;height:8px;border-radius:50%;background:var(--line)}
+.welcome-dot.active{background:var(--red)}
+
+body.dark-mode{
+  --paper:#1A1612;--paper-d:#231F1A;--paper-dd:#2C2620;
+  --ink:#F0E8D8;--ink-2:#D4C8B0;--ink-3:#9A8870;--ink-4:#6A5C48;
+  --red:#C44040;--amber:#C88830;--green:#3A9850;
+  --line:#3A3028;--line-l:#2E2820;
+  --hl-me:rgba(200,136,48,.18);--hl-cur:rgba(196,64,64,.10);
+  --shadow:rgba(0,0,0,.5);
+}
+body.dark-mode .screen{background:var(--paper)}
+body.dark-mode .play-header,
+body.dark-mode .app-header,
+body.dark-mode .play-sidebar,
+body.dark-mode .scene-nav-bar,
+body.dark-mode .bottom-bar{background:var(--paper)}
+body.dark-mode .play-card{background:var(--paper-d)}
+body.dark-mode input,body.dark-mode textarea,body.dark-mode select{background:var(--paper-d);color:var(--ink)}
+body.dark-mode .s-text.masked{background:#444038}
+body.dark-mode .blanc-word{background:#3A3028}
+body.dark-mode .souffleur-hint{background:#2A2420}
+#btn-dark-mode.active{color:var(--amber)}
+
+.reco-overlay{position:fixed;bottom:62px;left:50%;transform:translateX(-50%);background:rgba(24,18,10,.92);color:var(--paper);padding:.6rem 1.3rem;border-radius:6px;font-family:'IM Fell English',serif;font-size:1rem;z-index:60;display:none;flex-direction:column;align-items:center;gap:.35rem;min-width:220px;text-align:center;box-shadow:0 4px 20px rgba(0,0,0,.4)}
+.reco-overlay.show{display:flex}
+.reco-text{color:var(--amber);font-size:.82rem;line-height:1.5;max-width:260px}
+.reco-pulse{width:10px;height:10px;border-radius:50%;background:var(--red);animation:rpulse 1s infinite}
+@keyframes rpulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.5);opacity:.5}}
+/* ── ENREGISTREMENT ── */
+.rec-indicator{position:fixed;top:48px;left:.6rem;background:var(--red);color:var(--paper);font-family:'Courier Prime',monospace;font-size:.62rem;padding:.18rem .42rem;border-radius:1px;z-index:60;display:none;animation:rpulse .8s infinite}
+.rec-indicator.show{display:block}
+/* ── SURLIGNAGE MOTS ── */
+.s-text .hl-word{background:rgba(168,112,32,.28);border-radius:2px;cursor:pointer;border-bottom:1.5px solid var(--amber)}
+.s-text .hl-word:hover{background:rgba(168,112,32,.5)}
+/* ── MOTS CACHÉS BLANC PROGRESSIF ── */
+.blanc-word{
+  background:var(--ink-3);color:transparent;border-radius:2px;
+  cursor:pointer;user-select:none;letter-spacing:0;
+  transition:all .2s;font-family:'Courier Prime',monospace;
+  padding:0 1px;
+}
+.blanc-word:hover,.blanc-word[data-revealed="1"]{
+  background:rgba(168,112,32,.18);color:var(--ink-2);
+  font-family:inherit;letter-spacing:normal;
+}
+/* ── TOAST ── */
+.toast{position:fixed;bottom:66px;left:50%;transform:translateX(-50%) translateY(12px);background:var(--ink);color:var(--paper);padding:.38rem .95rem;border-radius:1px;font-family:'Courier Prime',monospace;font-size:.71rem;opacity:0;transition:all .24s;z-index:190;white-space:nowrap;pointer-events:none}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+</style>
+<!-- Firebase SDK — async/defer pour ne pas bloquer si réseau indisponible -->
+<script defer onerror="window._fbLoadErr=true" src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+<script defer onerror="window._fbLoadErr=true" src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+<script defer onerror="window._fbLoadErr=true" src="https://www.gstatic.com/firebasejs/9.22.1/firebase-storage-compat.js"></script>
+</head>
+<body>
+
+<!-- ══ LIBRARY ══ -->
+<div id="screen-library" class="screen active">
+  <div class="app-header">
+    <h1>Italiennes</h1>
+    <button class="icon-btn" id="btn-import-json" title="Importer JSON">📥</button>
+    <button class="btn primary" onclick="showScreen('import')">＋ Importer</button>
+  </div>
+  <div class="lib-toolbar"><span class="lib-count" id="lib-count"></span></div>
+  <div id="library-list" class="library-list"></div>
+  <div id="empty-lib" class="empty-lib" style="display:none">
+    <div class="sym">❧</div>
+    <h2>Bibliothèque vide</h2>
+    <p style="font-style:italic;font-size:.86rem;color:var(--ink-3)">Importez votre premier script</p>
+    <button class="btn primary" onclick="showScreen('import')" style="margin-top:.9rem">Importer un script</button>
+  </div>
+</div>
+
+<!-- ══ IMPORT ══ -->
+<div id="screen-import" class="screen">
+  <div class="app-header">
+    <button class="icon-btn" onclick="showScreen('library')">←</button>
+    <h1>Importer un script</h1>
+  </div>
+  <div class="import-body">
+    <div>
+      <div class="section-label">Fichier</div>
+      <div class="dropzone" id="dropzone">
+        <span class="dz-icon">📂</span>
+        <div class="dz-text"><strong>PDF · TXT · DOCX</strong><br>Appuyer pour choisir</div>
+      </div>
+      <input type="file" id="file-input" accept=".txt,.pdf,.docx" style="position:fixed;left:-9999px;opacity:0;width:1px;height:1px">
+    </div>
+    <div>
+      <div class="section-label">Coller le texte</div>
+      <div style="display:flex;flex-direction:column;gap:.48rem">
+        <div style="display:flex;gap:.42rem">
+          <input type="text" id="play-title" class="txt-input" placeholder="Titre" style="flex:1">
+          <input type="text" id="play-author" class="txt-input" placeholder="Auteur" style="flex:1">
+        </div>
+        <textarea id="paste-area" class="txt-input" placeholder="HAMLET : Être ou ne pas être…&#10;HORATIO : Mon prince, j'ai vu votre père."></textarea>
+        <button class="btn primary" onclick="importFromPaste()">Analyser →</button>
+      </div>
+    </div>
+    <div class="format-hint">
+      <strong>Formats reconnus :</strong> <code>NOM : réplique</code> · <code>NOM. texte</code> · <code>NOM — texte</code> · nom seul sur sa ligne.<br>
+      <code>(didascalies)</code> entre parenthèses. Scènes sur les mots-clés (Scène, Acte…).
+    </div>
+  </div>
+</div>
+
+<!-- ══ PLAY ══ -->
+<div id="screen-play" class="screen">
+  <div class="sb-overlay" id="sb-overlay" onclick="closeSidebar()"></div>
+  <div class="play-header">
+    <button class="icon-btn" onclick="closeSidebar();stopAll();showScreen('library')">←</button>
+    <button class="icon-btn" onclick="toggleSidebar()">☰</button>
+    <span class="play-title-hd" id="play-title-hd"></span>
+    <span class="mode-badge" id="mode-badge">LECTURE</span>
+    <button class="icon-btn" id="btn-dark-mode" onclick="toggleDarkMode()" title="Mode sombre">🌙</button>
+    <button class="icon-btn" id="btn-kid-mode" onclick="toggleKidMode()" title="Mode enfant">👶</button>
+    <button class="icon-btn" onclick="toggleSearch()" title="Rechercher">🔍</button>
+    <button class="icon-btn" onclick="openEditor()" title="Éditer">✏️</button>
+    <button class="icon-btn" onclick="showStats()" title="Stats">📊</button>
+  </div>
+  <!-- Barre de recherche -->
+  <div id="search-bar" style="display:none;padding:.4rem .8rem;border-bottom:1px solid var(--line);background:var(--paper-d);flex-shrink:0;align-items:center;gap:.5rem">
+    <input type="text" id="search-input" class="txt-input" placeholder="Rechercher dans le script…" style="flex:1;font-size:.85rem;padding:.32rem .55rem" oninput="doSearch(this.value)">
+    <span id="search-count" style="font-family:'Courier Prime',monospace;font-size:.68rem;color:var(--ink-3);white-space:nowrap"></span>
+    <button class="bb-btn" style="width:32px;height:32px;font-size:.8rem" onclick="searchNav(-1)">↑</button>
+    <button class="bb-btn" style="width:32px;height:32px;font-size:.8rem" onclick="searchNav(1)">↓</button>
+    <button class="icon-btn" style="font-size:.9rem" onclick="closeSearch()">✕</button>
+  </div>
+
+  <div class="play-layout">
+    <aside class="play-sidebar" id="play-sidebar">
+      <div class="sb-section"><div class="sb-label">Scènes</div><div class="scenes-list" id="scenes-list"></div></div>
+      <div class="sb-section"><div class="sb-label">Mon rôle</div><div id="role-list"></div></div>
+      <div class="sb-section"><div class="sb-label">Mode</div><div id="mode-list"></div></div>
+      <div class="sb-section" id="sb-blanc" style="display:none">
+        <div class="sb-label">Blanc progressif</div>
+        <div style="display:flex;gap:.35rem;align-items:center">
+          <button class="btn" style="flex:1;font-size:.7rem;padding:.3rem" onclick="incrementBlanc()">＋ Cacher</button>
+          <button class="btn" style="font-size:.7rem;padding:.3rem" onclick="resetBlanc()">↺</button>
+        </div>
+        <div id="blanc-level-display" style="font-family:'Courier Prime',monospace;font-size:.65rem;color:var(--ink-3);margin-top:.3rem;text-align:center"></div>
+      </div>
+      <div class="sb-section"><div class="sb-label">Mon texte (TTS)</div><div id="my-line-list"></div></div>
+      <div class="sb-section">
+        <div class="sb-label">Mon tour</div>
+        <div class="tts-grid">
+          <div class="tts-row" style="justify-content:space-between">
+            <span class="tts-lbl" style="min-width:auto">Auto-enchaîner</span>
+            <button id="btn-autochain" onclick="toggleAutoChain()"
+              style="font-family:'Courier Prime',monospace;font-size:.68rem;border:1.5px solid var(--line);border-radius:2px;background:transparent;color:var(--ink-3);padding:.22rem .55rem;cursor:pointer;transition:all .2s">
+              OFF
+            </button>
+          </div>
+          <div class="tts-row" id="autochain-delay-row" style="display:none">
+            <span class="tts-lbl">Vitesse</span>
+            <input type="range" id="autochain-delay" min="0.5" max="3" step="0.1" value="1">
+            <span class="tts-val" id="acd-val">1.0×</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="sb-section"><div class="sb-label">Voix par personnage</div><div id="voice-assign-list"></div></div>
+      <!-- Cache audio ElevenLabs -->
+      <div class="sb-section">
+        <div class="sb-label">Cache audio ElevenLabs</div>
+        <div style="font-family:'Courier Prime',monospace;font-size:.62rem;color:var(--ink-3);margin-bottom:.38rem" id="cache-status">—</div>
+        <div style="display:flex;gap:.35rem;flex-wrap:wrap;margin-bottom:.35rem">
+          <button class="btn primary" style="flex:1;font-size:.67rem;padding:.28rem" onclick="prechauffer()">☁ Préchauffer tout</button>
+          <button class="btn" style="font-size:.67rem;padding:.28rem" title="Vider le cache" onclick="clearAudioCache()">🗑</button>
+        </div>
+        <div id="prechauffe-bar" style="display:none">
+          <div style="height:3px;background:var(--line-l);border-radius:2px">
+            <div id="prechauffe-fill" style="height:100%;background:var(--amber);border-radius:2px;width:0%;transition:width .3s"></div>
+          </div>
+          <div id="prechauffe-txt" style="font-family:'Courier Prime',monospace;font-size:.6rem;color:var(--ink-3);margin-top:.22rem"></div>
+        </div>
+      </div>
+      <div class="sb-section">
+        <div class="sb-label">TTS</div>
+        <div class="tts-grid">
+          <div class="tts-row"><span class="tts-lbl">Vitesse</span><input type="range" id="tts-speed" min="0.5" max="2.2" step="0.1" value="1"><span class="tts-val" id="spd-val">1.0×</span></div>
+          <div class="tts-row"><span class="tts-lbl">Souffleur</span><input type="range" id="souffleur-delay" min="2" max="15" step="1" value="5"><span class="tts-val" id="suf-val">5s</span></div>
+          <div class="tts-row"><span class="tts-lbl">Limit.</span><input type="range" id="line-limit" min="0" max="30" step="5" value="0"><span class="tts-val" id="lim-val">∞</span></div>
+        </div>
+      </div>
+      <div class="sb-section">
+        <div style="display:flex;flex-direction:column;gap:.32rem">
+          <button class="btn" onclick="openFilRouge();closeSidebar()">🧵 Mon fil rouge</button>
+          <button class="btn" onclick="openEnregistrements();closeSidebar()">🎙️ Enregistrements</button>
+          <button class="btn" onclick="openPartage();closeSidebar()">🔗 Partager session</button>
+          <button class="btn" onclick="openQuiz();closeSidebar()">🎮 Quiz de mémorisation</button>
+          <button class="btn" onclick="exportMonTexte()">🖨️ Exporter mon texte</button>
+          <button class="btn" onclick="exportCurrentPlay()">↗ Exporter JSON</button>
+          <button class="btn red" onclick="confirmDelete()">🗑 Supprimer</button>
+        </div>
+      </div>
+    </aside>
+
+    <main class="play-main" id="play-main">
+      <div class="scene-nav-bar" id="scene-nav-bar">
+        <button class="scene-nav-btn" onclick="navScene(-1)">‹ Préc.</button>
+        <span class="timer-display stopped" id="timer-display" onclick="toggleTimer()" title="Minuteur — tap pour démarrer/arrêter · maintien pour reset">00:00</span>
+        <span class="scene-nav-title" id="scene-nav-title" onclick="toggleSidebar()" style="font-size:.78rem"></span>
+        <button class="scene-nav-btn" onclick="navScene(1)">Suiv. ›</button>
+      </div>
+      <div class="script-wrapper">
+        <div class="script-view" id="script-view"></div>
+        <div class="scrubber" id="scrubber"><div class="scrubber-track" id="scrubber-track"></div></div>
+        <div class="karaoke-view" id="karaoke-view">
+          <div class="k-prev" id="k-prev"></div>
+          <div class="k-current" id="k-current"></div>
+          <div class="k-next" id="k-next"></div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <div class="bottom-bar">
+    <button class="bb-btn" onclick="navigate(-1)">‹</button>
+    <div class="bb-center">
+      <button class="bb-btn accent" id="bb-play" onclick="togglePlay()">▶</button>
+      <button class="bb-btn" id="bb-reveal" onclick="revealCurrent()" style="display:none">👁</button>
+      <button class="bb-btn" id="bb-hear" onclick="hearLine()">🔊</button>
+      <button class="bb-btn" id="bb-mic" onclick="toggleReco()" title="Reconnaissance vocale">🎤</button>
+      <button class="bb-btn" id="bb-rec" onclick="toggleRecording()" title="Enregistrer ma voix">⏺️</button>
+      <button class="bb-btn" id="bb-loop" onclick="toggleLoop()" title="Boucle">🔁</button>
+      <button class="bb-btn" id="bb-note" onclick="openNote()" title="Note">📝</button>
+      <button class="bb-btn" id="bb-bm" onclick="toggleBookmark()">🔖</button>
+    </div>
+    <span class="bb-progress" id="bb-progress"></span>
+    <button class="bb-btn" onclick="navigate(1)">›</button>
+  </div>
+  <div class="souffleur-hint" id="souffleur-hint"></div>
+  <div class="loop-badge" id="loop-badge">🔁 Boucle active</div>
+  <div class="rec-indicator" id="rec-indicator">⏺ REC</div>
+  <div class="autochain-bar" id="autochain-bar"><div class="autochain-bar-fill" id="autochain-bar-fill"></div></div>
+  <div class="reco-overlay" id="reco-overlay">
+    <div style="display:flex;align-items:center;gap:.6rem">
+      <div class="reco-pulse"></div>
+      <span>Écoute en cours…</span>
+    </div>
+    <div class="reco-text" id="reco-text">Dites votre réplique</div>
+    <div id="reco-score" style="font-family:'Courier Prime',monospace;font-size:.7rem;color:var(--ink-4)"></div>
+    <button class="btn" style="margin-top:.2rem;font-size:.7rem;padding:.25rem .7rem" onclick="stopReco()">Arrêter</button>
+  </div>
+</div>
+
+<!-- ══ FIL ROUGE ══ -->
+<div id="screen-fil-rouge" class="screen">
+  <div class="app-header">
+    <button class="icon-btn" id="btn-fil-back">←</button>
+    <h1 style="font-size:.95rem;flex:1" id="fil-title">Mon fil rouge</h1>
+    <button class="icon-btn" onclick="exportMonTexte()" title="Exporter .txt">🖨️</button>
+  </div>
+  <div style="flex:1;overflow-y:auto;padding:.5rem 0 5rem" id="fil-list"></div>
+</div>
+
+<!-- ══ ENREGISTREMENTS ══ -->
+<div id="screen-enreg" class="screen">
+  <div class="app-header">
+    <button class="icon-btn" id="btn-enreg-back">←</button>
+    <h1 style="font-size:.95rem;flex:1">Enregistrements</h1>
+    <button class="icon-btn" onclick="clearAllRecordings()" title="Tout supprimer">🗑</button>
+  </div>
+  <div style="flex:1;overflow-y:auto;padding:.5rem .8rem 5rem" id="enreg-list"></div>
+</div>
+
+<!-- ══ PARTAGE ══ -->
+<div id="screen-partage" class="screen">
+  <div class="app-header">
+    <button class="icon-btn" id="btn-partage-back">←</button>
+    <h1 style="font-size:.95rem;flex:1">Partage de session</h1>
+  </div>
+  <div style="flex:1;overflow-y:auto;padding:1rem .9rem 3rem;display:flex;flex-direction:column;gap:1.1rem" id="partage-body"></div>
+</div>
+
+<!-- ══ BIENVENUE ══ -->
+<div class="welcome-ovl" id="welcome-ovl">
+  <div class="welcome-card" id="welcome-card">
+    <!-- généré dynamiquement -->
+  </div>
+</div>
+
+<!-- ══ QUIZ ══ -->
+<div id="screen-quiz" class="screen">
+  <div class="app-header">
+    <button class="icon-btn" id="btn-quiz-back">←</button>
+    <h1 style="font-size:1rem;flex:1">Quiz de mémorisation</h1>
+    <button class="icon-btn" id="btn-quiz-restart" onclick="startQuiz()" title="Recommencer">↺</button>
+  </div>
+  <div class="quiz-wrap" id="quiz-wrap">
+    <!-- Contenu généré dynamiquement par renderQuiz() -->
+  </div>
+</div>
+
+<!-- ══ ÉDITEUR ══ -->
+<div id="screen-editor" class="screen">
+
+<!-- ══ MODAL NOTES ══ -->
+<div class="modal-bg" id="notes-modal" onclick="if(event.target===this)closeNote()">
+  <div class="modal" style="max-height:60vh">
+    <div class="modal-hd">
+      <h2 id="notes-modal-title">Note</h2>
+      <button class="icon-btn" onclick="closeNote()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div style="display:flex;gap:.5rem;margin-bottom:.7rem;flex-wrap:wrap">
+        <button class="note-color-btn active" data-color="" style="background:var(--paper-d);border:2px solid var(--ink);padding:.3rem .7rem;border-radius:2px;cursor:pointer;font-size:.75rem;font-family:'Courier Prime',monospace" onclick="selectNoteColor(this,'')">Aucune</button>
+        <button class="note-color-btn" data-color="#FFD700" style="background:#FFD700;border:2px solid transparent;padding:.3rem .7rem;border-radius:2px;cursor:pointer" onclick="selectNoteColor(this,'#FFD700')">●</button>
+        <button class="note-color-btn" data-color="#FF8C69" style="background:#FF8C69;border:2px solid transparent;padding:.3rem .7rem;border-radius:2px;cursor:pointer" onclick="selectNoteColor(this,'#FF8C69')">●</button>
+        <button class="note-color-btn" data-color="#90EE90" style="background:#90EE90;border:2px solid transparent;padding:.3rem .7rem;border-radius:2px;cursor:pointer" onclick="selectNoteColor(this,'#90EE90')">●</button>
+        <button class="note-color-btn" data-color="#87CEEB" style="background:#87CEEB;border:2px solid transparent;padding:.3rem .7rem;border-radius:2px;cursor:pointer" onclick="selectNoteColor(this,'#87CEEB')">●</button>
+        <button class="note-color-btn" data-color="#DDA0DD" style="background:#DDA0DD;border:2px solid transparent;padding:.3rem .7rem;border-radius:2px;cursor:pointer" onclick="selectNoteColor(this,'#DDA0DD')">●</button>
+      </div>
+      <textarea id="note-text" class="txt-input" placeholder="Votre note (intention de jeu, rappel…)" style="min-height:80px;margin-bottom:.7rem"></textarea>
+      <div style="display:flex;gap:.5rem">
+        <button class="btn primary" style="flex:1" onclick="saveNote()">✓ Sauvegarder</button>
+        <button class="btn" id="notes-listen-btn" style="display:none" onclick="playRecording(_noteCurrentDi);closeNote()">▶ Écouter</button>
+        <button class="btn red" onclick="deleteNote()">🗑</button>
+      </div>
+    </div>
+  </div>
+</div>
+  <div class="app-header">
+    <button class="icon-btn" id="btn-editor-back">←</button>
+    <h1 style="font-size:.98rem;flex:1">Corriger le script</h1>
+    <button class="btn primary" onclick="saveEditor()">✓ Sauvegarder</button>
+  </div>
+  <div class="editor-hint">
+    <span style="color:var(--red)">PERSO :</span> réplique &nbsp;·&nbsp;
+    <span style="color:var(--ink-3)">#</span>didascalie<span style="color:var(--ink-3)">#</span> &nbsp;·&nbsp;
+    <span style="color:var(--amber)">##</span>Titre de scène<span style="color:var(--amber)">##</span>
+  </div>
+  <textarea id="editor-area" spellcheck="false" placeholder="Chargement…"></textarea>
+</div>
+
+<!-- ══ STATS ══ -->
+<div class="modal-bg" id="stats-modal" onclick="if(event.target===this)closeStats()">
+  <div class="modal">
+    <div class="modal-hd"><h2>Statistiques</h2><button class="icon-btn" onclick="closeStats()">✕</button></div>
+    <div class="modal-body" id="stats-body"></div>
+  </div>
+</div>
+
+<div class="loading-ovl" id="loading"><div id="load-msg">Chargement…</div><div class="loading-bar"></div><div class="loading-sub" id="load-sub"></div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+// ════ STORAGE ════
+const DB={
+  _mem:{},_useLS:false,
+  async init(){try{localStorage.setItem('_t','1');localStorage.removeItem('_t');this._useLS=true;}catch{}},
+  _k:(s,k)=>`it.${s}.${k}`,_ks:(s)=>`it.${s}.__k`,
+  _getKeys(s){try{return JSON.parse(localStorage.getItem(this._ks(s))||'[]');}catch{return[];}},
+  _setKeys(s,ks){try{localStorage.setItem(this._ks(s),JSON.stringify(ks));}catch{}},
+  async getAll(s){
+    if(!this._useLS)return Object.values(this._mem[s]||{});
+    return this._getKeys(s).map(k=>{try{return JSON.parse(localStorage.getItem(this._k(s,k)));}catch{return null;}}).filter(Boolean);
+  },
+  async get(s,k){
+    if(!this._useLS)return(this._mem[s]||{})[k]||null;
+    try{const v=localStorage.getItem(this._k(s,k));return v?JSON.parse(v):null;}catch{return null;}
+  },
+  async put(s,v){
+    const k=v.id;if(!k)return;
+    if(!this._useLS){if(!this._mem[s])this._mem[s]={};this._mem[s][k]=v;return;}
+    try{localStorage.setItem(this._k(s,k),JSON.stringify(v));const ks=this._getKeys(s);if(!ks.includes(k)){ks.unshift(k);this._setKeys(s,ks);}
+    }catch{if(!this._mem[s])this._mem[s]={};this._mem[s][k]=v;}
+  },
+  async del(s,k){
+    if(!this._useLS){delete(this._mem[s]||{})[k];return;}
+    try{localStorage.removeItem(this._k(s,k));const ks=this._getKeys(s).filter(x=>x!==k);this._setKeys(s,ks);}catch{}
+  },
+};
+
+// ════ UTILS ════
+const uuid=()=>([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g,c=>(c^crypto.getRandomValues(new Uint8Array(1))[0]&15>>c/4).toString(16));
+const esc=s=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const $=id=>document.getElementById(id);
+let _toastT;
+function toast(msg,dur=2600){const t=$('toast');t.textContent=msg;t.classList.add('show');clearTimeout(_toastT);_toastT=setTimeout(()=>t.classList.remove('show'),dur);}
+function loading(show,msg='',sub=''){$('loading').classList.toggle('show',show);if(msg)$('load-msg').textContent=msg;if(sub!==undefined)$('load-sub').textContent=sub;}
+function showScreen(n){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  const s=$('screen-'+n);if(s)s.classList.add('active');
+  if(n==='library')renderLibrary();
+  if(n==='library')history.replaceState({},'','');
+  else history.pushState({},'','');
+}
+
+// ════ PARSER ════
+const SCENE_RE=/^(sc[eè]ne|acte|tableau|prologue|épilogue|partie|chapitre)\b/i;
+const DIR_RE=/^\(.*\)$|^\[.*\]$/;
+const DIAL_RE=/^([A-ZÀÂÇÉÈÊËÎÏÔÛÙÜŒÆ][A-ZÀÂÇÉÈÊËÎÏÔÛÙÜŒÆ\s\-'.]*?)(\s+[a-zàâçéèêëîïôûùüœæ][^:]{0,60})?\s*:\s*(.+)$/;
+const DIAL_DOT=/^([A-ZÀÂÇÉÈÊËÎÏÔÛÙÜŒÆ][A-ZÀÂÇÉÈÊËÎÏÔÛÙÜŒÆ\s\-'.]*?)\.\s+(.+)$/;
+const DIAL_DASH=/^([A-ZÀÂÇÉÈÊËÎÏÔÛÙÜŒÆ][A-ZÀÂÇÉÈÊËÎÏÔÛÙÜŒÆ\s\-'.]*?)\s*[—–-]{1,2}\s+(.+)$/;
+const ROLE_COLORS=['#8A1818','#1A3878','#286838','#7A3888','#A87020','#18607A','#5A2818','#384818','#183860','#601838'];
+
+function cleanRole(r){return r.trim().replace(/\s+/g,' ').replace(/\s+[a-zàâçéèêëîïôûùüœæ].+$/,'').replace(/[.,;!?]+$/,'').trim()||r.trim();}
+function matchDialogue(line){
+  if(SCENE_RE.test(line))return null;
+  let m=DIAL_RE.exec(line);
+  if(m){
+    let role=cleanRole(m[1]);const inlineDir=(m[2]||'').trim();const text=m[3].trim();
+    if(!role||!text)return null;
+    if(role.split(/\s+/)[0]!==role.split(/\s+/)[0].toUpperCase())return null;
+    const cx=inlineDir.match(/^(et|ou|avec)\s+([A-ZÀÂÇÉÈÊËÎÏÔÛÙÜŒÆ][A-ZÀÂÇÉÈÊËÎÏÔÛÙÜŒÆ\s\-'.]+)$/);
+    if(cx)return{role:role+' '+cx[1]+' '+cx[2].trim(),inlineDir:'',text};
+    return{role,inlineDir,text};
+  }
+  m=DIAL_DOT.exec(line)||DIAL_DASH.exec(line);
+  if(m){const role=cleanRole(m[1]);const text=m[2].trim();if(!role||!text)return null;if(role.split(/\s+/)[0]!==role.split(/\s+/)[0].toUpperCase())return null;return{role,inlineDir:'',text};}
+  return null;
+}
+function normPDF(t){
+  return t.replace(/([A-ZÀÂÇÉÈÊËÎÏÔÛÙÜŒÆ]{2,})([a-zàâçéèêëîïôûùüœæ])/g,'$1 $2')
+          .replace(/([a-zàâçéèêëîïôûùüœæ,;.!?])([A-ZÀÂÇÉÈÊËÎÏÔÛÙÜŒÆ][a-zàâçéèêëîïôûùüœæ])/g,'$1 $2');
+}
+function parseScript(raw,title,author,isPDF=false){
+  const linesT=raw.split('\n').map(l=>l.trim());
+  const lines=[],rolesCount={};let scIdx=0,curSc=0,dIdx=0;
+  const push=o=>{o.idx=lines.length;lines.push(o);};
+  linesT.forEach(rawL=>{
+    const l=isPDF?normPDF(rawL):rawL;if(!l)return;
+    if(SCENE_RE.test(l)){push({type:'scene',text:l,scIdx});scIdx++;curSc=scIdx-1;return;}
+    if(DIR_RE.test(l)){push({type:'direction',text:l.slice(1,-1),scIdx:curSc});return;}
+    const d=matchDialogue(l);
+    if(d){
+      if(d.inlineDir)push({type:'direction',text:d.inlineDir,scIdx:curSc});
+      push({type:'dialogue',role:d.role,text:d.text,dIdx:dIdx++,scIdx:curSc});
+      rolesCount[d.role]=(rolesCount[d.role]||0)+1;return;
+    }
+    const last=lines[lines.length-1];
+    if(last?.type==='dialogue'){
+      const startsUpper=/^[A-ZÀÂÇÉÈÊËÎÏÔÛÙÜŒÆ]/.test(l);
+      const prevEndsPunct=/[.!?…»]$/.test(last.text.trim());
+      if(!startsUpper||!prevEndsPunct){last.text+=' '+l;return;}
+    }
+    push({type:'direction',text:l,scIdx:curSc});
+  });
+  const roles=Object.entries(rolesCount).sort((a,b)=>b[1]-a[1]).map(([name,count],i)=>{
+    const myLines=lines.filter(l=>l.type==='dialogue'&&l.role===name);
+    return{name,count,color:ROLE_COLORS[i%ROLE_COLORS.length],wordCount:myLines.reduce((a,l)=>a+l.text.split(/\s+/).length,0)};
+  });
+  const sceneLines=lines.filter(l=>l.type==='scene');
+  const scenes=sceneLines.length?sceneLines.map((sl,i)=>({idx:i,title:sl.text})):[{idx:0,title:'Scène 1'}];
+  return{id:uuid(),title:title||'Pièce sans titre',author:author||'',lines,roles,scenes,importedAt:Date.now(),progress:0};
+}
+
+// ════ TTS ════
+// ── ELEVENLABS TTS ──────────────────────────────────
+// API REST simple : POST /v1/text-to-speech/{voice_id}
+// Clé passée dans le header xi-api-key
+// Voix chargées dynamiquement depuis l'API (liste perso + bibliothèque)
+
+const _audioCache = new Map(); // cache mémoire session (rapide)
+let   _elVoices   = [];
+
+// ── Cache audio persistant (IndexedDB) ──────────────────────────────
+let _audioDB = null;
+
+async function openAudioDB(){
+  if(_audioDB) return _audioDB;
+  return new Promise((res,rej)=>{
+    const req = indexedDB.open('it_audio',1);
+    req.onupgradeneeded = e => e.target.result.createObjectStore('blobs');
+    req.onsuccess = e => { _audioDB=e.target.result; res(_audioDB); };
+    req.onerror   = () => { console.warn('AudioDB failed'); res(null); };
+  });
+}
+
+async function audioCacheGet(key){
+  // 1. Mémoire
+  if(_audioCache.has(key)) return _audioCache.get(key);
+  // 2. IndexedDB local
+  const db = await openAudioDB();
+  if(db){
+    const blob = await new Promise(res=>{
+      const tx=db.transaction('blobs','readonly');
+      const req=tx.objectStore('blobs').get(key);
+      req.onsuccess=()=>res(req.result||null);
+      req.onerror=()=>res(null);
+    });
+    if(blob){ _audioCache.set(key,blob); return blob; }
+  }
+  // 3. Firebase Storage
+  if(FB_ST){
+    try{
+      const ref=FB_ST.ref(`tts_cache/${key}.mp3`);
+      const url=await ref.getDownloadURL();
+      const r=await fetch(url);
+      if(r.ok){
+        const blob=await r.blob();
+        await audioCachePut(key,blob,false); // sauvegarder localement (pas re-upload)
+        return blob;
+      }
+    }catch{}
+  }
+  return null;
+}
+
+async function audioCachePut(key, blob, uploadToFB=true){
+  // 1. Mémoire
+  if(_audioCache.size>150) _audioCache.delete(_audioCache.keys().next().value);
+  _audioCache.set(key,blob);
+  // 2. IndexedDB
+  const db=await openAudioDB();
+  if(db){
+    const tx=db.transaction('blobs','readwrite');
+    tx.objectStore('blobs').put(blob,key);
+  }
+  // 3. Firebase Storage (partagé avec la troupe)
+  if(uploadToFB && FB_ST){
+    FB_ST.ref(`tts_cache/${key}.mp3`).put(blob,{contentType:'audio/mpeg'}).catch(()=>{});
+  }
+}
+
+async function audioCacheClear(){
+  _audioCache.clear();
+  const db=await openAudioDB();
+  if(db){const tx=db.transaction('blobs','readwrite');tx.objectStore('blobs').clear();}
+}
+
+async function audioCacheCount(){
+  const db=await openAudioDB();
+  if(!db)return 0;
+  return new Promise(res=>{
+    const tx=db.transaction('blobs','readonly');
+    const req=tx.objectStore('blobs').count();
+    req.onsuccess=()=>res(req.result);
+    req.onerror=()=>res(0);
+  });
+}
+
+function getELKey(){ return localStorage.getItem('it.el_key') || ''; }
+
+function saveELKey(){
+  const k = $('el-key').value.trim();
+  if(!k){ toast('Clé vide'); return; }
+  localStorage.setItem('it.el_key', k);
+  $('el-key').value = '';
+  _audioCache.clear();
+  _elVoices = [];
+  toast('✓ Clé ElevenLabs sauvegardée');
+  updateELStatus();
+  loadELVoices().then(()=>{
+    if(S.play) TTS.autoAssign(S.play.roles);
+  });
+}
+
+function updateELStatus(){
+  const el = $('el-status'); if(!el) return;
+  const k = getELKey();
+  if(k && _elVoices.length){
+    el.textContent = `✓ ElevenLabs actif — ${_elVoices.length} voix disponibles`;
+    el.style.color = 'var(--green)';
+  } else if(k){
+    el.textContent = '⏳ Chargement des voix…';
+    el.style.color = 'var(--amber)';
+  } else {
+    el.textContent = '⚠ Sans clé : voix système uniquement';
+    el.style.color = 'var(--ink-4)';
+  }
+}
+
+async function loadELVoices(){
+  const k = getELKey(); if(!k) return;
+  try{
+    const r = await fetch('https://api.elevenlabs.io/v1/voices', {
+      headers:{ 'xi-api-key': k }
+    });
+    if(!r.ok) throw new Error('Clé invalide ('+r.status+')');
+    const data = await r.json();
+    // Garder toutes les voix et trier : French first, others after
+    _elVoices = data.voices.sort((a,b)=>{
+      const aFR = (a.labels?.language||'').toLowerCase().includes('fr') ||
+                  (a.name||'').toLowerCase().includes('french');
+      const bFR = (b.labels?.language||'').toLowerCase().includes('fr') ||
+                  (b.name||'').toLowerCase().includes('french');
+      return (bFR - aFR) || a.name.localeCompare(b.name);
+    });
+    updateELStatus();
+    renderVoiceAssign();
+  } catch(e){
+    $('el-status').textContent = '✗ ' + e.message;
+    $('el-status').style.color = 'var(--red)';
+  }
+}
+
+async function testELKey(){
+  const k = getELKey(); if(!k){ toast("Entre ta clé d'abord"); return; }
+  const btn = $('btn-test-el');
+  btn.textContent = '…'; btn.disabled = true;
+  try{
+    await loadELVoices();
+    if(!_elVoices.length) throw new Error('Aucune voix chargée');
+    // Tester avec la première voix disponible
+    const v = _elVoices[0];
+    const blob = await _elFetch('Bonjour, test réussi !', v.voice_id);
+    playAudioBlob(blob, ()=>{ btn.textContent='▶ Tester'; btn.disabled=false; });
+    $('el-status').textContent = '✓ Fonctionne — '+_elVoices.length+' voix chargées';
+    $('el-status').style.color = 'var(--green)';
+  } catch(e){
+    btn.textContent='▶ Tester'; btn.disabled=false;
+    $('el-status').textContent = '✗ ' + e.message;
+    $('el-status').style.color = 'var(--red)';
+  }
+}
+
+async function _elFetch(text, voiceId){
+  const k = getELKey(); if(!k) throw new Error('Pas de clé');
+  if(!text || !voiceId) throw new Error('text/voiceId manquant');
+  const cacheKey = voiceId + '||' + text;
+  // Vérifier le cache (mémoire → IndexedDB → Firebase)
+  const cached = await audioCacheGet(cacheKey);
+  if(cached) return cached;
+  // Générer via ElevenLabs
+  const rate = parseFloat($('tts-speed')?.value || 1);
+  const r = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
+    method: 'POST',
+    headers:{ 'xi-api-key': k, 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      text,
+      model_id: 'eleven_multilingual_v2',   // meilleure qualité, supporte le français
+      voice_settings:{
+        stability: 0.45,        // un peu de variation pour du théâtre
+        similarity_boost: 0.80,
+        style: 0.20,            // légère expressivité
+        use_speaker_boost: true,
+        speed: Math.max(0.7, Math.min(1.2, rate)), // ElevenLabs: 0.7–1.2
+      },
+      output_format: 'mp3_44100_128',
+    }),
+  });
+  if(!r.ok){
+    const err = await r.json().catch(()=>({detail:'Erreur '+r.status}));
+    const msg = err.detail?.message || err.detail || 'Erreur '+r.status;
+    throw new Error(msg);
+  }
+  const blob = await r.blob();
+  await audioCachePut(cacheKey, blob, true); // sauvegarde locale + Firebase
+  return blob;
+}
+
+function playAudioBlob(blob, onend){
+  const url = URL.createObjectURL(blob);
+  const audio = new Audio(url);
+  audio.onended = ()=>{ URL.revokeObjectURL(url); onend?.(); };
+  audio.onerror = ()=>{ URL.revokeObjectURL(url); onend?.(); };
+  audio.play().catch(e=>{ console.error('Audio play:',e); URL.revokeObjectURL(url); onend?.(); });
+  return audio;
+}
+
+const VOICE_PROFILES=[
+  {label:'Neutre',     pitch:1.0, rate:1.0},
+  {label:'Grave',      pitch:0.6, rate:0.9},
+  {label:'Aigu',       pitch:1.7, rate:1.0},
+  {label:'Vif',        pitch:1.1, rate:1.35},
+  {label:'Lent',       pitch:0.9, rate:0.7},
+  {label:'Enfant',     pitch:1.85,rate:1.1},
+  {label:'Vieux',      pitch:0.7, rate:0.75},
+  {label:'Énergique',  pitch:1.2, rate:1.5},
+  {label:'Solennel',   pitch:0.65,rate:0.85},
+  {label:'Mystérieux', pitch:0.8, rate:0.8},
+];
+
+const TTS={
+  voices:[],_ki:null,_curAudio:null,
+
+  load(){
+    const upd=()=>{
+      const all=window.speechSynthesis?.getVoices()||[];
+      if(!all.length)return;
+      const fr=all.filter(v=>v.lang.startsWith('fr'));
+      this.voices=[...fr,...all.filter(v=>!v.lang.startsWith('fr'))];
+      renderVoiceAssign();
+      if(S.play&&!S.play.roles.every(r=>S.voiceAssignments[r.name]))this.autoAssign(S.play.roles);
+    };
+    if(window.speechSynthesis){window.speechSynthesis.onvoiceschanged=upd;[50,300,800,2000].forEach(d=>setTimeout(upd,d));}
+    updateELStatus();
+    if(getELKey()&&!_elVoices.length){loadELVoices().then(()=>{if(S.play)this.autoAssign(S.play.roles);});}
+  },
+
+  async speak(text,voiceId,opts={}){
+    if(!text){opts.onend?.();return;}
+    this.stop();
+    const lim=opts.limit&&opts.limit>0?limitText(text,opts.limit):text;
+    const k=getELKey();
+    if(k&&voiceId){
+      try{const blob=await _elFetch(lim,voiceId);this._curAudio=playAudioBlob(blob,opts.onend);return;}
+      catch(e){console.warn('EL TTS fallback:',e.message);}
+    }
+    if(!window.speechSynthesis){opts.onend?.();return;}
+    const u=new SpeechSynthesisUtterance(lim);
+    const sv=this.voices.find(v=>v.name===voiceId)||this.voices[0];
+    if(sv)u.voice=sv;
+    u.lang='fr-FR';
+    const prof=opts._profile||null;
+    u.rate=parseFloat($('tts-speed')?.value||1)*(prof?.rate||1);
+    u.pitch=prof?.pitch||1;
+    const done=()=>{clearInterval(this._ki);opts.onend?.();};
+    u.onend=done;
+    u.onerror=ev=>{clearInterval(this._ki);if(ev.error!=='canceled')opts.onend?.();};
+    this._ki=setInterval(()=>{if(window.speechSynthesis.paused)window.speechSynthesis.resume();},5000);
+    window.speechSynthesis.speak(u);
+  },
+
+  speakRole(text,role,opts={}){
+    const prof=S.voiceProfiles[role]||null;
+    this.speak(text,S.voiceAssignments[role]||'',{...opts,_profile:prof});
+  },
+
+  stop(){
+    if(this._curAudio){try{this._curAudio.pause();this._curAudio.src='';}catch{}this._curAudio=null;}
+    clearInterval(this._ki);
+    if(window.speechSynthesis)window.speechSynthesis.cancel();
+  },
+
+  autoAssign(roles){
+    const useEL=getELKey()&&_elVoices.length>0;
+    const elF=useEL?_elVoices.filter(v=>(v.labels?.gender||'').toLowerCase()==='female'):[];
+    const elM=useEL?_elVoices.filter(v=>(v.labels?.gender||'').toLowerCase()==='male'):[];
+    const elO=useEL?_elVoices.filter(v=>!['female','male'].includes((v.labels?.gender||'').toLowerCase())):[];
+    const elPool=[...elF,...elM,...elO];
+    const used=new Set(Object.values(S.voiceAssignments).filter(Boolean));
+    let elIdx=0;
+    const sys=this.voices,sysLen=Math.max(sys.length,1);
+    roles.forEach((r,i)=>{
+      if(!S.voiceAssignments[r.name]){
+        if(useEL){
+          let v=null;
+          for(let j=elIdx;j<elPool.length;j++){if(!used.has(elPool[j].voice_id)){v=elPool[j];elIdx=j+1;break;}}
+          if(!v)v=elPool[i%Math.max(elPool.length,1)];
+          if(v){S.voiceAssignments[r.name]=v.voice_id;used.add(v.voice_id);}
+        } else {
+          S.voiceAssignments[r.name]=sys[i%sysLen]?.name||'';
+        }
+      }
+      if(!S.voiceProfiles[r.name])S.voiceProfiles[r.name]=VOICE_PROFILES[i%VOICE_PROFILES.length];
+    });
+    saveSettings();renderVoiceAssign();
+  },
+};
+function limitText(text,s){
+  if(!s||s<=0)return text;
+  const w=text.split(/\s+/),spd=parseFloat($('tts-speed')?.value||1);
+  const max=Math.round(s*3*spd);
+  return max>0&&w.length>max?w.slice(0,max).join(' ')+'…':text;
+}
+
+// ════ STATE ════
+const MODES=[
+  {id:'lecture',   icon:'📖',label:'Lecture',        desc:'▶ lit la réplique courante'},
+  {id:'masquer',   icon:'🙈',label:'Masquer',        desc:'Mes répliques cachées'},
+  {id:'blanc',     icon:'🌫️',label:'Blanc progressif',desc:'Texte disparaît au fil des sessions'},
+  {id:'karaoke',   icon:'🎬',label:'Karaoké',        desc:'Ligne par ligne plein écran'},
+  {id:'tts',       icon:'🔊',label:'TTS Auto',       desc:'App lit les partenaires'},
+  {id:'souffleur', icon:'🤫',label:'Souffleur',      desc:'Masqué + indice auto'},
+  {id:'amorce',    icon:'🎯',label:'Amorçage',       desc:'Seulement le cue'},
+  {id:'aleatoire', icon:'🎲',label:'Aléatoire',      desc:'Répliques au hasard'},
+];
+const MY_LINE_OPTS=[
+  {id:'skip',        icon:'🤐',label:'Silence',      desc:'Pause — je le dis seul'},
+  {id:'before',      icon:'▶⏸',label:'Avant',       desc:'Dit une fois puis silence'},
+  {id:'after',       icon:'⏸▶',label:'Après',       desc:'Silence puis relit après'},
+  {id:'before_after',icon:'↩️', label:'Avant/après', desc:'Dit, silence, redit'},
+  {id:'chain',       icon:'⛓️', label:'Enchaîné',   desc:'Dit et continue'},
+];
+const S={
+  plays:[],play:null,myRole:null,myRoles:[], // myRoles = multi-rôle
+  mode:'lecture',lineIdx:0,
+  isPlaying:false,souffleurT:null,bookmarks:new Set(),dialogues:[],
+  voiceAssignments:{},  // role → voiceName
+  voiceProfiles:{},    // role → {pitch, rate}
+  myLineBehavior:'skip',
+  loopActive:false,
+  autoChain:false,   // enchaîner automatiquement sur mon tour
+  blancLevel:0, // 0=visible, 1=75%, 2=50%, 3=25%, 4=caché
+  notes:{}, // {dIdx: {text, color}}
+  highlights:{}, // {dIdx: Set of word indices}
+  revealed:new Set(), // dIdx révélés en mode masquer
+  searchMatches:[],searchIdx:0,
+  _myTurnPending:false,_afterPending:false,_scrubInited:false,
+  _recoActive:false,_recoGotResult:false,_recMediaRecorder:null,_recChunks:[],_recPlayId:null,
+  _sessionStart:null,
+};
+
+function saveSettings(){
+  try{localStorage.setItem('it.settings',JSON.stringify({mode:S.mode,myLineBehavior:S.myLineBehavior,voiceAssignments:S.voiceAssignments,voiceProfiles:S.voiceProfiles,blancLevel:S.blancLevel,autoChain:S.autoChain}));}catch{}
+}
+function loadSettings(){
+  try{
+    const d=JSON.parse(localStorage.getItem('it.settings')||'{}');
+    // Valider le mode contre la liste connue
+    if(d.mode&&MODES.find(m=>m.id===d.mode))S.mode=d.mode;
+    if(d.myLineBehavior&&MY_LINE_OPTS.find(o=>o.id===d.myLineBehavior))S.myLineBehavior=d.myLineBehavior;
+    if(typeof d.blancLevel==='number')S.blancLevel=d.blancLevel;
+    if(typeof d.autoChain==='boolean')S.autoChain=d.autoChain;
+    if(d.voiceProfiles&&typeof d.voiceProfiles==='object')S.voiceProfiles=d.voiceProfiles;
+  }catch{}
+}
+
+// ════ LIBRARY ════
+async function loadLib(){
+  S.plays=await DB.getAll('plays');
+  S.plays.sort((a,b)=>{if(a.favorite&&!b.favorite)return-1;if(!a.favorite&&b.favorite)return 1;return b.importedAt-a.importedAt;});
+}
+async function renderLibrary(){
+  const list=$('library-list'),emp=$('empty-lib');
+  $('lib-count').textContent=`${S.plays.length} pièce${S.plays.length!==1?'s':''}`;
+  if(!S.plays.length){list.innerHTML='';emp.style.display='flex';return;}
+  emp.style.display='none';
+  let progMap={};
+  try{
+    const progs=await DB.getAll('progress');
+    progs.forEach(p=>progMap[p.id]=p.progress||0);
+  }catch{/* progress non critique */}
+  list.innerHTML=S.plays.map(p=>{
+    const dlg=p.lines.filter(l=>l.type==='dialogue').length;
+    const d=new Date(p.importedAt).toLocaleDateString('fr',{day:'numeric',month:'short'});
+    const progress=progMap[p.id]||p.progress||0;
+    return`<div class="play-card" onclick="openPlay('${p.id}')">
+      <div class="card-top">
+        <div style="flex:1"><div class="card-title">${esc(p.title)}</div>${p.author?`<div class="card-author">${esc(p.author)}</div>`:''}</div>
+        <button class="fav-btn" onclick="event.stopPropagation();toggleFav('${p.id}')">${p.favorite?'⭐':'☆'}</button>
+        <div class="card-actions">
+          <button class="btn" style="padding:.25rem .42rem;font-size:.63rem" onclick="event.stopPropagation();_expById('${p.id}')">↗</button>
+          <button class="btn red" style="padding:.25rem .42rem;font-size:.63rem" onclick="event.stopPropagation();deletePlay('${p.id}')">✕</button>
+        </div>
+      </div>
+      <div class="card-meta"><span>🎭 ${p.roles.length} perso${p.roles.length!==1?'s':''}</span><span>💬 ${dlg} répl.</span><span>📅 ${d}</span></div>
+      <div class="card-progress"><div class="card-progress-fill" style="width:${progress}%"></div></div>
+    </div>`;
+  }).join('');
+}
+async function toggleFav(id){const p=S.plays.find(p=>p.id===id);if(!p)return;p.favorite=!p.favorite;await DB.put('plays',p);S.plays.sort((a,b)=>{if(a.favorite&&!b.favorite)return-1;if(!a.favorite&&b.favorite)return 1;return b.importedAt-a.importedAt;});renderLibrary();}
+async function deletePlay(id){
+  if(!confirm('Supprimer cette pièce ?'))return;
+  await DB.del('plays',id);
+  await DB.del('positions',id);
+  await DB.del('progress',id);
+  await DB.del('highlights',id);
+  await DB.del('sessions',id);
+  await DB.del('notes',id);
+  const bms=await DB.getAll('bookmarks');
+  await Promise.all(bms.filter(b=>b.playId===id).map(b=>DB.del('bookmarks',b.id)));
+  S.plays=S.plays.filter(p=>p.id!==id);
+  renderLibrary();toast('Pièce supprimée');
+}
+async function confirmDelete(){if(S.play)await deletePlay(S.play.id);showScreen('library');}
+function _expById(id){doExport(S.plays.find(p=>p.id===id));}
+function doExport(p){if(!p)return;const b=new Blob([JSON.stringify(p,null,2)],{type:'application/json'});const u=URL.createObjectURL(b);Object.assign(document.createElement('a'),{href:u,download:`${p.title}.italienne.json`}).click();URL.revokeObjectURL(u);}
+function exportCurrentPlay(){doExport(S.play);}
+$('btn-import-json').addEventListener('click',()=>{
+  const inp=Object.assign(document.createElement('input'),{type:'file',accept:'.json'});
+  inp.addEventListener('change',async e=>{
+    const f=e.target.files[0];if(!f)return;
+    try{
+      const data=JSON.parse(await f.text());
+      // Validation minimale
+      if(!data||typeof data!=='object')throw new Error('Format invalide');
+      if(!Array.isArray(data.lines))throw new Error('Champ "lines" manquant ou invalide');
+      if(!Array.isArray(data.roles))data.roles=[];
+      if(!Array.isArray(data.scenes))data.scenes=[{idx:0,title:'Scène 1'}];
+      if(!data.title)data.title='Pièce importée';
+      if(!data.id)data.id=uuid();
+      data.importedAt=Date.now();
+      await DB.put('plays',data);S.plays.unshift(data);renderLibrary();
+      toast(`Pièce importée — ${data.lines.filter(l=>l.type==='dialogue').length} répliques`);
+    }catch(err){toast('Erreur JSON : '+err.message);}
+  });
+  inp.click();
+});
+
+// ════ IMPORT ════
+const dropzone=$('dropzone'),fileInput=$('file-input');
+dropzone.addEventListener('click',()=>fileInput.click());
+dropzone.addEventListener('touchend',e=>{e.preventDefault();fileInput.click();});
+dropzone.addEventListener('dragover',e=>{e.preventDefault();dropzone.classList.add('drag')});
+dropzone.addEventListener('dragleave',()=>dropzone.classList.remove('drag'));
+dropzone.addEventListener('drop',async e=>{e.preventDefault();dropzone.classList.remove('drag');const f=e.dataTransfer.files[0];if(f)await handleFile(f);});
+fileInput.addEventListener('change',async e=>{const f=e.target.files[0];if(f){await handleFile(f);fileInput.value='';}});
+
+async function handleFile(f){
+  loading(true,'Lecture du fichier…',f.name);
+  try{
+    const ext=f.name.toLowerCase().split('.').pop();let text='';
+    if(ext==='pdf'){loading(true,'Extraction PDF…',f.name);text=await extractPDF(f);}
+    else if(ext==='docx'){loading(true,'Extraction DOCX…',f.name);text=await extractDOCX(f);}
+    else text=await f.text();
+    const trimmed=text.trim();
+    if(trimmed.length<30){loading(false);toast('Extraction vide — essaie de coller le texte');return;}
+    loading(true,'Analyse…',`${trimmed.length} caractères…`);
+    await new Promise(r=>setTimeout(r,55));
+    const play=parseScript(trimmed,f.name.replace(/\.[^.]+$/,''),'',ext==='pdf'||ext==='docx');
+    const dlg=play.lines.filter(l=>l.type==='dialogue').length;
+    if(!dlg){$('paste-area').value=trimmed.slice(0,5000);$('play-title').value=f.name.replace(/\.[^.]+$/,'');loading(false);showScreen('import');toast('Format non reconnu — texte extrait ci-dessous',4000);return;}
+    await DB.put('plays',play);S.plays.unshift(play);loading(false);
+    await openPlay(play.id);toast(`✓ ${dlg} répliques · ${play.roles.length} personnages`);
+    fbUploadPlay(play).catch(()=>{}); // upload cloud en arrière-plan
+  }catch(e){loading(false);console.error(e);toast('Erreur : '+e.message);}
+}
+async function extractPDF(file){
+  // Charger pdf.js si pas encore disponible
+  if(!window.pdfjsLib){
+    await new Promise((res,rej)=>{
+      const s=document.createElement('script');
+      s.src='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+      s.onload=()=>{
+        pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+        res();
+      };
+      s.onerror=rej;
+      document.head.appendChild(s);
+    });
+  }
+  const buf=await file.arrayBuffer();const pdf=await pdfjsLib.getDocument({data:buf}).promise;let out='';
+  for(let i=1;i<=pdf.numPages;i++){
+    loading(true,'Extraction PDF…',`Page ${i}/${pdf.numPages}`);
+    const page=await pdf.getPage(i);const content=await page.getTextContent();
+    const items=content.items.filter(it=>it.str&&it.str.trim());if(!items.length){out+='\n';continue;}
+    const heights=items.map(it=>Math.abs(it.transform[3]||12));
+    const medH=heights.sort((a,b)=>a-b)[Math.floor(heights.length/2)]||12;const thresh=medH*0.55;
+    const lineMap=new Map();
+    items.forEach(it=>{const y=it.transform[5];let found=false;for(const[ky]of lineMap){if(Math.abs(ky-y)<thresh){lineMap.get(ky).push(it);found=true;break;}}if(!found)lineMap.set(y,[it]);});
+    const sortedYs=[...lineMap.keys()].sort((a,b)=>b-a);
+    for(const y of sortedYs){
+      const row=lineMap.get(y).sort((a,b)=>a.transform[4]-b.transform[4]);
+      let line='';row.forEach((it,idx)=>{if(idx>0){const prev=row[idx-1];const gap=it.transform[4]-(prev.transform[4]+prev.width);if(gap>prev.width*0.05||gap>1)line+=' ';}line+=it.str;});
+      const t=line.trim();if(t)out+=t+'\n';
+    }
+    out+='\n';
+  }
+  return out;
+}
+async function extractDOCX(file){
+  if(!window.JSZip){await new Promise((r,j)=>{const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js';s.onload=r;s.onerror=j;document.head.appendChild(s);});}
+  const buf=await file.arrayBuffer();const zip=await JSZip.loadAsync(buf);
+  const xml=await zip.file('word/document.xml').async('string');
+  return xml.replace(/<w:br[^>]*\/?>/gi,'\n').replace(/<w:p(?:\s[^>]*)?\/?>/gi,'\n').replace(/<[^>]+>/g,'').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&amp;/g,'&');
+}
+async function importFromPaste(){
+  const text=$('paste-area').value.trim(),title=$('play-title').value.trim(),author=$('play-author').value.trim();
+  if(!text){toast('Colle du texte d\'abord');return;}
+  loading(true,'Analyse…','');
+  try{
+    const play=parseScript(text,title,author);
+    const dlg=play.lines.filter(l=>l.type==='dialogue').length;
+    if(!dlg){loading(false);toast('Aucune réplique détectée — vérifiez le format');return;}
+    await DB.put('plays',play);S.plays.unshift(play);loading(false);
+    $('paste-area').value='';$('play-title').value='';$('play-author').value='';
+    await openPlay(play.id);toast(`✓ ${dlg} répliques · ${play.roles.length} personnages`);
+    fbUploadPlay(play).catch(()=>{}); // upload cloud en arrière-plan
+  }catch(e){loading(false);console.error(e);toast('Erreur : '+e.message);}
+}
+
+// ════ OPEN PLAY ════
+async function openPlay(id){
+  const play=S.plays.find(p=>p.id===id)||await DB.get('plays',id);
+  if(!play){toast('Pièce introuvable');return;}
+
+  S.play=play;
+  // Forcer mode lecture si mode masquant — évite l'écran blanc
+  if(['masquer','souffleur','blanc'].includes(S.mode))S.mode='lecture';
+  S.myRole=play.roles[0]?.name||null;
+  S.myRoles=S.myRole?[S.myRole]:[];
+  S.dialogues=play.lines.filter(l=>l.type==='dialogue');
+  S.isPlaying=false;S._myTurnPending=false;S._afterPending=false;S.loopActive=false;
+  S.revealed=new Set();S.notes={};S.highlights={};S.bookmarks=new Set();
+  _navHistory.length=0;_navFuture.length=0;
+  S.searchMatches=[];S.searchIdx=0;S.lineIdx=0;
+
+  // Afficher l'écran IMMÉDIATEMENT avec ce qu'on a — pas d'attente async
+  showScreen('play');resetHeader();
+  $('mode-badge').textContent=MODES.find(m=>m.id===S.mode)?.label.toUpperCase()||'LECTURE';
+  $('loop-badge').classList.remove('show');
+  renderSidebar();renderContent();updateBottomBar();updateAutochainUI();
+
+  // Charger les données async EN ARRIÈRE-PLAN et re-rendre si nécessaire
+  try{
+    const [savedNotes,pos,bms]=await Promise.all([
+      DB.get('notes',id),
+      DB.get('positions',id),
+      loadBookmarks(id),
+    ]);
+    S.notes=savedNotes?.data||{};
+    S.lineIdx=Math.min(pos?.lineIdx||0,Math.max(0,S.dialogues.length-1));
+    S.bookmarks=bms;
+    await loadHighlights(id);
+    // Re-rendre avec les données complètes
+    renderScript();updateScrubberCursor();scrollToCur();updateSceneHighlight();
+  }catch(e){
+    console.warn('openPlay async load:',e);
+    // Le rendu initial sans données async reste visible
+  }
+
+  TTS.load();
+  if(TTS.voices.length&&play.roles.some(r=>!S.voiceAssignments[r.name]))
+    TTS.autoAssign(play.roles);
+  if(!S._scrubInited){S._scrubInited=true;initScrubber();}
+  startSession().catch(()=>{});
+}
+
+// ════ SIDEBAR ════
+function toggleSidebar(){const sb=$('play-sidebar');sb.classList.toggle('open');$('sb-overlay').classList.toggle('show',sb.classList.contains('open'));}
+function closeSidebar(){$('play-sidebar').classList.remove('open');$('sb-overlay').classList.remove('show');}
+function renderSidebar(){renderScenes();renderRoles();renderModes();renderMyLineOpts();renderVoiceAssign();updateCacheStatus();}
+
+function renderScenes(){
+  if(!S.play)return;
+  const cur=S.dialogues[S.lineIdx]?.scIdx??0;
+  $('scenes-list').innerHTML=S.play.scenes.map(sc=>`
+    <div class="sb-item ${sc.idx===cur?'active':''}" data-sc="${sc.idx}" onclick="jumpScene(${sc.idx});closeSidebar()">
+      <span class="ico">${sc.idx===cur?'▸':''}</span>
+      <span style="font-size:.79rem">${esc(sc.title||'Scène '+(sc.idx+1))}</span>
+    </div>`).join('');
+}
+function updateSceneHighlight(){
+  if(!S.play||!S.dialogues.length)return;
+  const cur=S.dialogues[S.lineIdx]?.scIdx??0;
+  $('scenes-list').querySelectorAll('.sb-item').forEach(el=>{
+    const si=parseInt(el.dataset.sc);el.classList.toggle('active',si===cur);
+    el.querySelector('.ico').textContent=si===cur?'▸':'';
+  });
+  const sc=S.play?.scenes.find(s=>s.idx===cur);
+  $('scene-nav-title').textContent=sc?.title||'';
+}
+function isMyLine(role){return S.myRoles.includes(role);}
+function renderRoles(){
+  if(!S.play)return;
+  const multiHint=S.myRoles.length>1?` <span style="font-size:.6rem;color:var(--amber)">(${S.myRoles.length} rôles)</span>`:'';
+  $('role-list').innerHTML=`<div style="font-size:.7rem;color:var(--ink-3);margin-bottom:.35rem;font-style:italic">Tap=solo · Longuement=ajouter${multiHint}</div>`+
+  S.play.roles.map(r=>{
+    const active=S.myRoles.includes(r.name);
+    return`<div class="sb-item ${active?'active':''}" data-role="${esc(r.name)}"
+      onclick="selectRole(this.dataset.role)"
+      ontouchstart="this._ts=Date.now()"
+      ontouchend="if(Date.now()-this._ts>400){event.preventDefault();toggleExtraRole(this.dataset.role);}">
+      <div class="r-dot" style="background:${r.color}"></div>
+      <span>${esc(r.name)}</span>
+      <span class="stat">${r.count}r</span>
+      ${active?'<span style="margin-left:auto;font-size:.7rem">✓</span>':''}
+    </div>`;
+  }).join('');
+}
+function renderModes(){
+  $('mode-list').innerHTML=MODES.map(m=>`
+    <div class="sb-item ${m.id===S.mode?'active':''}" onclick="setMode('${m.id}');closeSidebar()" title="${m.desc}">
+      <span class="ico">${m.icon}</span><span>${m.label}</span>
+    </div>`).join('');
+}
+function renderMyLineOpts(){
+  $('my-line-list').innerHTML=MY_LINE_OPTS.map(o=>`
+    <div class="sb-item ${o.id===S.myLineBehavior?'active':''}" data-id="${o.id}" onclick="S.myLineBehavior=this.dataset.id;saveSettings();renderMyLineOpts();toast('Mon texte : ${o.label}')" title="${o.desc}">
+      <span class="ico">${o.icon}</span><span>${o.label}</span>
+    </div>`).join('');
+}
+function renderVoiceAssign(){
+  const el=$('voice-assign-list');if(!el||!S.play)return;
+  const hasEL=getELKey()&&_elVoices.length>0;
+  const hasSys=TTS.voices.length>0;
+  if(!hasEL&&!hasSys){
+    el.innerHTML='<div style="font-size:.71rem;color:var(--ink-4);font-style:italic;padding:.3rem 0">Chargement voix…</div>';return;
+  }
+  el.innerHTML=S.play.roles.map(r=>{
+    const assigned=S.voiceAssignments[r.name]||'';
+    const options=hasEL
+      ?_elVoices.map(v=>`<option value="${esc(v.voice_id)}" ${assigned===v.voice_id?'selected':''}>${esc(v.name)}</option>`).join('')
+      :TTS.voices.map(v=>`<option value="${esc(v.name)}" ${assigned===v.name?'selected':''}>${v.name.replace(/Microsoft |Google /,'').slice(0,28)} [${v.lang}]</option>`).join('');
+    const curName=hasEL
+      ?(_elVoices.find(v=>v.voice_id===assigned)?.name||'?')
+      :(TTS.voices.find(v=>v.name===assigned)?.name||'?').replace(/Microsoft |Google /,'').slice(0,22);
+    return`<div style="margin-bottom:.65rem;padding-bottom:.55rem;border-bottom:1px solid var(--line-l)">
+      <div style="display:flex;align-items:center;gap:.4rem;margin-bottom:.32rem">
+        <div style="width:10px;height:10px;border-radius:50%;background:${r.color};flex-shrink:0"></div>
+        <span style="font-family:'Courier Prime',monospace;font-size:.72rem;font-weight:700;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(r.name)}</span>
+        <span style="font-family:'Courier Prime',monospace;font-size:.62rem;color:var(--ink-3)">${esc(curName)}</span>
+        <button data-preview="${esc(r.name)}" style="background:none;border:1px solid var(--line);padding:.1rem .28rem;border-radius:1px;cursor:pointer;font-size:.65rem;font-family:'Courier Prime',monospace;color:var(--ink-3);flex-shrink:0">▶</button>
+      </div>
+      <select class="voice-sel" data-role="${esc(r.name)}">${options}</select>
+    </div>`;
+  }).join('');
+  el.querySelectorAll('select[data-role]').forEach(sel=>{
+    sel.addEventListener('change',()=>{S.voiceAssignments[sel.dataset.role]=sel.value;saveSettings();renderVoiceAssign();});
+  });
+  el.querySelectorAll('button[data-preview]').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      const role=btn.dataset.preview;
+      const sample=S.dialogues.find(d=>d.role===role);
+      const txt=sample?sample.text.split(/\s+/).slice(0,8).join(' '):'Bonjour, je m\'appelle '+role;
+      TTS.speakRole(txt,role,{});
+    });
+  });
+}
+
+function selectRole(name){
+  // Solo: ce rôle seul
+  S.myRole=name;S.myRoles=[name];
+  stopAll();renderRoles();renderContent();toast('Rôle : '+name);
+}
+function toggleExtraRole(name){
+  // Long-press: ajouter/retirer du multi-rôle
+  if(S.myRoles.includes(name)){
+    if(S.myRoles.length===1)return; // garder au moins un
+    S.myRoles=S.myRoles.filter(r=>r!==name);
+    if(!S.myRoles.includes(S.myRole))S.myRole=S.myRoles[0];
+  } else {
+    S.myRoles.push(name);
+  }
+  stopAll();renderRoles();renderContent();
+  toast(S.myRoles.length>1?'Multi-rôle : '+S.myRoles.join(', '):'Rôle : '+S.myRoles[0]);
+}
+function setMode(m){
+  S.mode=m;stopAll();S.revealed=new Set();saveSettings();
+  $('mode-badge').textContent=MODES.find(x=>x.id===m)?.label.toUpperCase()||m;
+  renderModes();renderContent();updateBottomBar();
+  // Afficher la section blanc progressif seulement en mode blanc
+  $('sb-blanc').style.display=m==='blanc'?'block':'none';
+  if(m==='blanc'){updateBlancDisplay();}
+}
+function updateBottomBar(){$('bb-reveal').style.display=['masquer','souffleur'].includes(S.mode)?'flex':'none';}
+
+// ════ NAVIGATION ════
+// Historique de navigation pour mode aléatoire
+const _navHistory=[];let _navFuture=[];
+
+function navigate(delta){
+  // Mode boucle: bord de pièce → wrap-around
+  if(S.loopActive&&S.mode!=='aleatoire'){
+    const n=S.lineIdx+delta;
+    if(n<0){S.lineIdx=S.dialogues.length-1;_nav();toast('🔁');return;}
+    if(n>=S.dialogues.length){S.lineIdx=0;_nav();toast('🔁');return;}
+  }
+  if(S.mode==='aleatoire'){
+    if(delta<0&&_navHistory.length>1){
+      // Reculer dans l'historique
+      _navFuture.push(_navHistory.pop());
+      S.lineIdx=_navHistory[_navHistory.length-1];
+    } else if(delta>0&&_navFuture.length){
+      // Avancer dans le futur (si on a reculé)
+      const next=_navFuture.pop();
+      _navHistory.push(next);S.lineIdx=next;
+    } else {
+      jumpRandom();
+      return;
+    }
+    _nav();return;
+  }
+  const n=S.lineIdx+delta;
+  if(n<0||n>=S.dialogues.length)return;
+  S.lineIdx=n;
+  if(S.isPlaying){TTS.stop();_nav();setTimeout(playStep,200);return;}
+  _nav();
+}
+function jumpScene(si){const fi=S.dialogues.findIndex(d=>d.scIdx===si);const fi2=fi>=0?fi:S.dialogues.findIndex(d=>d.scIdx>=si);if(fi2>=0){S.lineIdx=fi2;_nav();}}
+function jumpLine(di){S.lineIdx=di;_nav();}
+function jumpRandom(){
+  if(!S.dialogues.length)return;
+  S.lineIdx=Math.floor(Math.random()*S.dialogues.length);
+  _navHistory.push(S.lineIdx);
+  if(_navHistory.length>50)_navHistory.shift(); // limiter la taille
+  _navFuture=[];
+  _nav();
+}
+function navScene(delta){
+  const curSc=S.dialogues[S.lineIdx]?.scIdx??0;
+  let target=curSc+delta;
+  // Boucler pour sauter les éventuelles scènes sans réplique
+  while(target>=0&&target<S.play.scenes.length){
+    const fi=S.dialogues.findIndex(d=>d.scIdx===target);
+    if(fi>=0){S.lineIdx=fi;_nav();return;}
+    target+=delta;
+  }
+}
+function _nav(){
+  if(S.mode==='karaoke')renderKaraoke();
+  else{highlightCurrent();scrollToCur();updateScrubberCursor();}
+  updateProg();updateSceneHighlight();
+  if(S.mode==='souffleur'&&S._myTurnPending)resetSouffleur();
+  savePos();
+}
+function scrollToCur(){requestAnimationFrame(()=>{const el=$('sl-'+S.lineIdx);if(el)el.scrollIntoView({behavior:'smooth',block:'center'});});}
+function highlightCurrent(){document.querySelectorAll('.s-line').forEach(el=>el.classList.toggle('current',parseInt(el.dataset.di)===S.lineIdx));}
+function updateProg(){
+  if(!S.dialogues.length){$('bb-progress').textContent='—';return;}
+  $('bb-progress').textContent=`${S.lineIdx+1}/${S.dialogues.length}`;
+}
+let _saveProgT=null;
+async function savePos(){
+  if(!S.play)return;
+  await DB.put('positions',{id:S.play.id,lineIdx:S.lineIdx});
+  clearTimeout(_saveProgT);
+  _saveProgT=setTimeout(async()=>{
+    if(!S.play||!S.dialogues.length)return;
+    const progress=Math.round(S.lineIdx/S.dialogues.length*100);
+    S.play.progress=progress;
+    await DB.put('progress',{id:S.play.id,progress});
+    // Sync Firebase en arrière-plan (silencieux)
+    fbSaveProgress(S.play.id, S.lineIdx).catch(()=>{});
+  },3000);
+}
+
+// ════ RENDER ════
+function renderContent(){
+  const kar=S.mode==='karaoke';
+  $('script-view').style.display=kar?'none':'block';
+  // Le scrubber fixed est géré par .visible dans showScreen — ne pas toucher style.display
+  $('scene-nav-bar').style.display='flex';
+  $('karaoke-view').classList.toggle('show',kar);
+  if(kar)renderKaraoke();
+  else{renderScript();renderScrubber();updateScrubberCursor();scrollToCur();updateSceneHighlight();}
+  updateProg();
+}
+function simpleHash(str){
+  // Hash simple et déterministe pour choisir les mots à cacher
+  let h=0;for(let i=0;i<str.length;i++){h=(h*31+str.charCodeAt(i))>>>0;}return h;
+}
+function renderBlancText(text,di){
+  // Mode blanc progressif : cache progressivement les mots de la réplique
+  const level=S.blancLevel||0;
+  if(level===0)return renderTextWithHighlights(text,di,true);
+  const ratio=[0,0.25,0.5,0.75,1][Math.min(level,4)];
+  const tokens=text.split(/(\s+)/);
+  let wordIdx=0;
+  const result=tokens.map(token=>{
+    if(/^\s+$/.test(token))return esc(token);
+    const wi=wordIdx++;
+    // Déterministe : un mot est toujours caché au même niveau
+    const h=simpleHash(token+di+wi);
+    const threshold=(h%100)/100;
+    if(threshold<ratio){
+      // Remplacer par des underscores de longueur similaire
+      const underscores='_'.repeat(Math.max(2,Math.min(token.length,8)));
+      return`<span class="blanc-word" onclick="event.stopPropagation();toggleRevealWord(this,'${esc(token)}')" title="Tap pour révéler">${underscores}</span>`;
+    }
+    return esc(token);
+  }).join('');
+  return result;
+}
+function highlightSearch(text,di){
+  if(!S.searchMatches.length)return esc(text);
+  const query=$('search-input')?.value||'';
+  if(!query)return esc(text);
+  const re=new RegExp('('+query.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+')','gi');
+  return esc(text).replace(re,(m,p)=>`<mark class="${S.searchMatches[S.searchIdx]?.di===di?'current-match':''}">${p}</mark>`);
+}
+function renderScript(){
+  if(!S.play)return;
+  const roleMap={};S.play.roles.forEach(r=>{roleMap[r.name]=r.color;});
+  let html='';
+  S.play.lines.forEach(line=>{
+    if(line.type==='scene'){html+=`<div class="scene-hd">${esc(line.text)}</div>`;return;}
+    if(line.type==='direction'){html+=`<div class="s-dir">${esc(line.text)}</div>`;return;}
+    const isMe=isMyLine(line.role),color=roleMap[line.role]||'#8A1818';
+    const di=line.dIdx,cur=di===S.lineIdx,bm=S.bookmarks.has(di);
+    const note=S.notes[di];
+    let textHtml='';
+    if(S.mode==='amorce'&&isMe){
+      const prev=S.dialogues[di-1];
+      textHtml=`<div class="amorce-cue">← ${esc(prev?'…'+prev.text.split(/\s+/).slice(-3).join(' '):'(début)')}</div>`;
+    } else if((S.mode==='masquer'||S.mode==='souffleur')&&isMe){
+      const isRev=S.revealed.has(di);
+      textHtml=`<div class="s-text masked${isRev?' revealed':''}" id="st-${di}" onclick="event.stopPropagation();toggleReveal(${di})">${esc(line.text)}</div>`;
+    } else if(S.mode==='blanc'&&isMe){
+      textHtml=`<div class="s-text" id="st-${di}">${renderBlancText(line.text,di)}</div>`;
+    } else {
+      textHtml=`<div class="s-text">${renderTextWithHighlights(line.text,di,true)}</div>`;
+    }
+    // Note dot
+    const noteDot=note?`<div class="note-dot" style="background:${note.color||'var(--amber)'}" onclick="event.stopPropagation();openNote(${di})" title="${esc(note.text.slice(0,30))}"></div>`:'';
+    // Note border
+    const noteBorder=note&&note.color?`border-left-color:${note.color}!important`:'' ;
+    const cls=['s-line',cur?'current':'',isMe?'is-me':'',bm?'bookmarked':'',note?'has-note':''].filter(Boolean).join(' ');
+    html+=`<div class="${cls}" id="sl-${di}" data-di="${di}" onclick="jumpLine(${di})" ${note?`style="${noteBorder}"`:''}>
+      <div class="s-role" style="color:${color}">${esc(line.role)}</div>
+      ${noteDot}${textHtml}</div>`;
+  });
+  $('script-view').innerHTML=html;
+}
+function renderKaraoke(){
+  if(!S.play)return;
+  const ds=S.dialogues,cur=ds[S.lineIdx],prev=ds[S.lineIdx-1],next=ds[S.lineIdx+1];
+  const roleMap={};S.play.roles.forEach(r=>{roleMap[r.name]=r.color;});
+  const kHtml=line=>{if(!line)return'';const c=roleMap[line.role]||'#8A1818';return`<span class="k-role-lbl" style="color:${c}">${esc(line.role)}</span>${esc(line.text)}`;};
+  $('k-prev').innerHTML=prev?kHtml(prev):'';$('k-next').innerHTML=next?kHtml(next):'';
+  if(cur){
+    const isMe=isMyLine(cur.role),c=roleMap[cur.role]||'#8A1818';
+    const masked=(S.mode==='masquer'||S.mode==='souffleur')&&isMe;
+    const kc=$('k-current');kc.className='k-current'+(isMe?' my-turn':'')+(masked?' masked-k':'');
+    kc.innerHTML=`<span class="k-role-lbl" style="color:${c}">${esc(cur.role)}</span>${esc(cur.text)}`;
+    kc.onclick=masked?()=>kc.classList.toggle('masked-k'):null;
+  }
+  updateProg();
+}
+
+// ── SCRUBBER ──
+function renderScrubber(){
+  const track=$('scrubber-track');if(!track||!S.play)return;
+  const ds=S.dialogues,total=ds.length;if(!total)return;
+  // Garder le curseur existant avant de reconstruire
+  let html='';
+  ds.forEach((d,i)=>{html+=`<div class="s-tick" style="top:${(i/(total-1)*100).toFixed(2)}%;background:${isMyLine(d.role)?'var(--amber)':'var(--line)'}"></div>`;});
+  track.innerHTML=html;
+  // Recréer le curseur immédiatement après
+  const cur=document.createElement('div');cur.className='s-cursor';track.appendChild(cur);
+  updateScrubberCursor();
+}
+function updateScrubberCursor(){
+  const track=$('scrubber-track');if(!track||!S.dialogues.length)return;
+  let cur=track.querySelector('.s-cursor');
+  if(!cur){cur=document.createElement('div');cur.className='s-cursor';track.appendChild(cur);}
+  const pct=S.dialogues.length>1 ? S.lineIdx/(S.dialogues.length-1) : 0;
+  cur.style.top=(pct*100).toFixed(2)+'%';
+}
+function initScrubber(){
+  const sc=$('scrubber');if(!sc)return;
+
+  function pctToIdx(pct){
+    return Math.round(Math.max(0,Math.min(pct,1))*Math.max(0,S.dialogues.length-1));
+  }
+
+  function pctFromY(clientY){
+    const r=sc.getBoundingClientRect();
+    return (clientY-r.top)/r.height;
+  }
+
+  function seek(clientY){
+    if(!S.dialogues.length)return;
+    S.lineIdx=pctToIdx(pctFromY(clientY));
+    _nav();
+  }
+
+  // ── Pointer Events : marche sur touch ET souris, aucun conflit ──
+  sc.addEventListener('pointerdown',e=>{
+    e.preventDefault();
+    sc.setPointerCapture(e.pointerId); // capture : le pointeur reste sur sc même si on sort
+    seek(e.clientY);
+  });
+
+  sc.addEventListener('pointermove',e=>{
+    if(!sc.hasPointerCapture(e.pointerId))return;
+    seek(e.clientY);
+  });
+
+  sc.addEventListener('pointerup',e=>{
+    if(sc.hasPointerCapture(e.pointerId))sc.releasePointerCapture(e.pointerId);
+    seek(e.clientY);
+  });
+
+  sc.addEventListener('pointercancel',e=>{
+    if(sc.hasPointerCapture(e.pointerId))sc.releasePointerCapture(e.pointerId);
+  });
+}
+
+// ════ PLAY / STOP ════
+// DESIGN: le mode d'affichage (lecture/masquer/karaoke/etc.) est INDÉPENDANT
+// du comportement TTS. ▶ lance toujours l'auto-play TTS.
+// myLineBehavior contrôle ce qui se passe SUR MES LIGNES :
+//   skip        → pause, ▶ pour avancer
+//   before      → lit ma ligne, pause, ▶ pour avancer
+//   after       → pause, ▶ relit ma ligne puis avance
+//   before_after → lit, pause, ▶ relit puis avance
+//   chain       → lit ma ligne et enchaîne automatiquement
+
+function togglePlay(){
+  if(S.isPlaying){stopAll();return;}
+
+  // Cas "après" : l'utilisateur vient de dire sa réplique → ▶ la relit puis continue
+  if(S._afterPending){
+    S._afterPending=false;S._myTurnPending=false;
+    clearAutoChainCountdown();
+    const cur=S.dialogues[S.lineIdx];if(!cur)return;
+    setHeaderSpeaking(cur.role);
+    TTS.speakRole(cur.text,cur.role,{onend:()=>{
+      resetHeader();
+      _advanceAndPlay();
+    }});
+    return;
+  }
+
+  // Cas "mon tour en attente" (skip ou before) : ▶ avance à la réplique suivante et continue
+  if(S._myTurnPending){
+    S._myTurnPending=false;resetHeader();clearSouffleur();clearAutoChainCountdown();
+    _advanceAndPlay();
+    return;
+  }
+
+  // Cas normal : lancer l'auto-play depuis la position courante
+  startPlay();
+}
+
+// Avancer d'une réplique et relancer playStep
+function _advanceAndPlay(){
+  const next=S.lineIdx+1;
+  if(next>=S.dialogues.length){
+    if(S.loopActive){S.lineIdx=0;_nav();startPlay();}
+    else{stopAll();toast('Fin de la pièce ✓');}
+    return;
+  }
+  S.lineIdx=next;_nav();startPlay();
+}
+
+function startPlay(){
+  S.isPlaying=true;
+  $('bb-play').classList.add('active');$('bb-play').textContent='⏸';
+  playStep();
+}
+
+function stopAll(){
+  S.isPlaying=false;
+  TTS.stop();clearSouffleur();clearAutoChainCountdown();
+  $('bb-play').classList.remove('active');$('bb-play').textContent='▶';
+  resetHeader();
+}
+
+// ── AUTO-CHAIN ──
+let _acT=null,_acAnim=null;
+
+function toggleAutoChain(){
+  S.autoChain=!S.autoChain;
+  saveSettings();
+  updateAutochainUI();
+  toast(S.autoChain?'Auto-enchaîner ON':'Auto-enchaîner OFF');
+}
+function updateAutochainUI(){
+  const btn=$('btn-autochain');
+  const row=$('autochain-delay-row');
+  if(!btn)return;
+  if(S.autoChain){
+    btn.textContent='ON';
+    btn.style.background='var(--amber)';btn.style.color='var(--paper)';btn.style.borderColor='var(--amber)';
+    if(row)row.style.display='flex';
+  } else {
+    btn.textContent='OFF';
+    btn.style.background='transparent';btn.style.color='var(--ink-3)';btn.style.borderColor='var(--line)';
+    if(row)row.style.display='none';
+  }
+}
+
+function clearAutoChainCountdown(){
+  clearTimeout(_acT);cancelAnimationFrame(_acAnim);
+  const bar=$('autochain-bar');if(bar)bar.classList.remove('show');
+}
+
+function startAutoChainCountdown(onDone){
+  clearAutoChainCountdown();
+  // Calcul du délai selon la longueur de la réplique courante
+  // ~2.5 mots/seconde au théâtre, ajusté par le multiplicateur de vitesse
+  const cur=S.dialogues[S.lineIdx];
+  const words=cur?cur.text.split(/\s+/).filter(Boolean).length:5;
+  const speedMult=parseFloat($('autochain-delay')?.value||1);
+  // Base: mots / 2.5 mots/s, minimum 2s, maximum 30s, divisé par le multiplicateur
+  const baseDelay=Math.max(2000, Math.min(30000, (words/2.5)*1000));
+  const delay=Math.round(baseDelay/speedMult);
+  // Afficher le délai calculé dans le header
+  const secs=(delay/1000).toFixed(1);
+  setHeaderMyTurn($('play-title-hd').innerHTML.replace(/<\/span>$/,`</span> <span style="font-family:'Courier Prime',monospace;font-size:.65rem;color:var(--ink-4)">${secs}s</span>`));
+  const fill=$('autochain-bar-fill');
+  const bar=$('autochain-bar');
+  if(!fill||!bar)return;
+  bar.classList.add('show');
+  fill.style.transition='none';fill.style.width='100%';
+  requestAnimationFrame(()=>{
+    fill.style.transition=`width ${delay}ms linear`;
+    fill.style.width='0%';
+  });
+  _acT=setTimeout(()=>{
+    clearAutoChainCountdown();
+    if(S._myTurnPending)onDone();
+  },delay);
+}
+
+function _pauseMyTurn(afterPending,msg){
+  S.isPlaying=false;
+  TTS.stop();
+  $('bb-play').classList.remove('active');$('bb-play').textContent='▶';
+  S._myTurnPending=true;
+  S._afterPending=!!afterPending;
+  setHeaderMyTurn(msg);
+  if(S.mode==='souffleur')startSouffleur();
+  // Auto-enchaîner si activé
+  if(S.autoChain){
+    startAutoChainCountdown(()=>{
+      if(!S._myTurnPending)return; // déjà géré
+      if(S._afterPending){
+        // Mode before_after ou after: relit ma réplique puis avance
+        S._afterPending=false;S._myTurnPending=false;
+        const cur=S.dialogues[S.lineIdx];if(!cur)return;
+        setHeaderSpeaking(cur.role);
+        TTS.speakRole(cur.text,cur.role,{onend:()=>{resetHeader();_advanceAndPlay();}});
+      } else {
+        // Mode skip ou before: avance directement
+        S._myTurnPending=false;resetHeader();clearSouffleur();
+        _advanceAndPlay();
+      }
+    });
+  }
+}
+
+function playStep(){
+  if(!S.isPlaying)return;
+  const cur=S.dialogues[S.lineIdx];
+  if(!cur){
+    if(S.loopActive){S.lineIdx=0;_nav();setTimeout(playStep,400);return;}
+    stopAll();toast('Fin de la pièce ✓');return;
+  }
+  const isMe=isMyLine(cur.role);
+  const lim=parseInt($('line-limit')?.value||0);
+
+  if(!isMe){
+    // Réplique d'un partenaire → TTS la lit
+    setHeaderSpeaking(cur.role);
+    TTS.speakRole(cur.text,cur.role,{limit:lim,onend:()=>{
+      resetHeader();
+      if(!S.isPlaying)return;
+      const next=S.lineIdx+1;
+      if(next>=S.dialogues.length){
+        if(S.loopActive){S.lineIdx=0;_nav();setTimeout(playStep,400);return;}
+        stopAll();toast('Fin de la pièce ✓');return;
+      }
+      S.lineIdx=next;_nav();
+      setTimeout(playStep,300);
+    }});
+    return;
+  }
+
+  // C'est MA réplique — comportement selon myLineBehavior
+  clearSouffleur();
+  const beh=S.myLineBehavior;
+
+  if(beh==='chain'){
+    // Enchaîner : lit ma réplique et continue directement
+    setHeaderSpeaking(cur.role);
+    TTS.speakRole(cur.text,cur.role,{onend:()=>{
+      resetHeader();
+      if(!S.isPlaying)return;
+      const next=S.lineIdx+1;
+      if(next>=S.dialogues.length){
+        if(S.loopActive){S.lineIdx=0;_nav();setTimeout(playStep,400);return;}
+        stopAll();toast('Fin de la pièce ✓');return;
+      }
+      S.lineIdx=next;_nav();setTimeout(playStep,300);
+    }});
+
+  } else if(beh==='before'){
+    // Lit ma réplique PUIS pause → ▶ pour avancer
+    setHeaderSpeaking(cur.role);
+    TTS.speakRole(cur.text,cur.role,{onend:()=>{
+      resetHeader();
+      _pauseMyTurn(false,'À vous — ▶ pour continuer');
+    }});
+
+  } else if(beh==='before_after'){
+    // Lit ma réplique PUIS pause → ▶ relit PUIS avance
+    setHeaderSpeaking(cur.role);
+    TTS.speakRole(cur.text,cur.role,{onend:()=>{
+      resetHeader();
+      _pauseMyTurn(true,'À vous — ▶ pour entendre à nouveau');
+    }});
+
+  } else if(beh==='after'){
+    // Pause directe → ▶ lit ma réplique PUIS avance
+    _pauseMyTurn(true,'À vous — ▶ pour entendre après');
+
+  } else {
+    // skip (défaut) : pause directe → ▶ pour avancer
+    _pauseMyTurn(false,'À vous — ▶ pour continuer');
+  }
+}
+function setHeaderSpeaking(role){const c=S.play?.roles.find(r=>r.name===role)?.color||'#8A1818';$('play-title-hd').innerHTML=`<span style="color:${c}">${esc(role)}</span><span class="speaking-ind"><span></span><span></span><span></span></span>`;}
+function setHeaderMyTurn(msg){$('play-title-hd').innerHTML=`<span style="color:var(--amber);font-style:italic">${msg}</span>`;}
+function resetHeader(){if(S.play)$('play-title-hd').textContent=S.play.title+(S.play.author?' — '+S.play.author:'');}
+function hearLine(){
+  const cur=S.dialogues[S.lineIdx];if(!cur)return;
+  const wasPlaying=S.isPlaying;
+  S.isPlaying=false;
+  TTS.stop();clearSouffleur();
+  $('bb-play').classList.remove('active');$('bb-play').textContent='▶';
+  setHeaderSpeaking(cur.role);
+  TTS.speakRole(cur.text,cur.role,{onend:()=>{
+    resetHeader();
+    // Si on était en mode auto-play, on signale que c'est à l'utilisateur de continuer
+    if(wasPlaying&&!['lecture','masquer','karaoke'].includes(S.mode)){
+      setHeaderMyTurn('▶ pour continuer');
+      S._myTurnPending=true;
+    }
+  }});
+}
+
+// ════ MASQUER / SOUFFLEUR ════
+function revealCurrent(){toggleReveal(S.lineIdx);}
+function revealLine(di){
+  S.revealed.add(di);
+  const el=$('st-'+di);if(el)el.classList.add('revealed');
+}
+function toggleRevealWord(span,original){
+  // Tap sur un mot caché → révèle le mot ; re-tap → re-cache
+  if(span.dataset.revealed==='1'){
+    span.textContent='_'.repeat(Math.max(2,Math.min(original.length,8)));
+    span.dataset.revealed='0';
+  } else {
+    span.textContent=original;
+    span.dataset.revealed='1';
+  }
+}
+function toggleReveal(di){
+  if(S.revealed.has(di)){
+    S.revealed.delete(di);
+    const el=$('st-'+di);if(el)el.classList.remove('revealed');
+  } else {
+    S.revealed.add(di);
+    const el=$('st-'+di);if(el)el.classList.add('revealed');
+  }
+}
+function startSouffleur(){
+  clearSouffleur();const d=parseInt($('souffleur-delay')?.value||5)*1000;
+  S.souffleurT=setTimeout(()=>{
+    const cur=S.dialogues[S.lineIdx];if(!cur)return;
+    const h=$('souffleur-hint');h.textContent=cur.text.split(/\s+/).slice(0,3).join(' ')+'…';h.classList.add('show');
+  },d);
+}
+function clearSouffleur(){clearTimeout(S.souffleurT);S.souffleurT=null;$('souffleur-hint').classList.remove('show');}
+function resetSouffleur(){clearSouffleur();if(S._myTurnPending&&S.mode==='souffleur')startSouffleur();}
+
+// ════ MODE BOUCLE ════
+function toggleLoop(){
+  S.loopActive=!S.loopActive;
+  $('bb-loop').classList.toggle('active',S.loopActive);
+  $('loop-badge').classList.toggle('show',S.loopActive);
+  toast(S.loopActive?'🔁 Boucle activée':'Boucle désactivée');
+}
+// Dans navigate(), si loopActive et fin atteinte → revenir au début de la réplique courante
+// Intégré dans navigate() plus bas via un wrap
+
+// ════ MODE BLANC PROGRESSIF ════
+function incrementBlanc(){
+  S.blancLevel=Math.min((S.blancLevel||0)+1,4);
+  saveSettings();renderContent();updateBlancDisplay();
+  const labels=['Visible','25% cachés','50% cachés','75% cachés','Tout caché'];
+  toast('Mode blanc : '+labels[S.blancLevel]);
+}
+function resetBlanc(){
+  S.blancLevel=0;saveSettings();renderContent();updateBlancDisplay();
+  toast('Mode blanc réinitialisé');
+}
+function updateBlancDisplay(){
+  const el=$('blanc-level-display');if(!el)return;
+  const labels=['● Visible','●● 25% cachés','●●● 50% cachés','●●●● 75% cachés','●●●●● Tout caché'];
+  el.textContent=labels[Math.min(S.blancLevel||0,4)];
+  el.style.color=S.blancLevel===0?'var(--ink-4)':S.blancLevel>=4?'var(--red)':'var(--amber)';
+}
+
+// ════ RECHERCHE FULL-TEXT ════
+let _searchDebT=null;
+function toggleSearch(){
+  const bar=$('search-bar');
+  const visible=bar.style.display==='flex'||bar.style.display==='';
+  // La barre a display:none dans l'HTML par défaut mais deux display:none, il faut forcer
+  if(bar.style.display!=='flex'){
+    bar.style.display='flex';
+    setTimeout(()=>$('search-input')?.focus(),80);
+  } else {
+    closeSearch();
+  }
+}
+function closeSearch(){
+  $('search-bar').style.display='none';
+  S.searchMatches=[];S.searchIdx=0;
+  renderScript();
+}
+function doSearch(q){
+  clearTimeout(_searchDebT);
+  _searchDebT=setTimeout(()=>{
+    S.searchMatches=[];S.searchIdx=0;
+    if(!q||q.length<2){renderScript();$('search-count').textContent='';return;}
+    const re=new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'gi');
+    S.dialogues.forEach((d,i)=>{
+      let m;re.lastIndex=0;
+      while((m=re.exec(d.text))!==null)S.searchMatches.push({di:i,pos:m.index});
+    });
+    $('search-count').textContent=S.searchMatches.length?`${S.searchIdx+1}/${S.searchMatches.length}`:'0 résultat';
+    if(S.searchMatches.length){S.lineIdx=S.searchMatches[0].di;_nav();}
+    renderScript();
+  },220);
+}
+function searchNav(delta){
+  if(!S.searchMatches.length)return;
+  S.searchIdx=(S.searchIdx+delta+S.searchMatches.length)%S.searchMatches.length;
+  S.lineIdx=S.searchMatches[S.searchIdx].di;
+  $('search-count').textContent=`${S.searchIdx+1}/${S.searchMatches.length}`;
+  _nav();renderScript();
+}
+
+// ════ NOTES COLORÉES ════
+let _noteCurrentDi=null,_noteCurrentColor='';
+function openNote(di){
+  if(di===undefined)di=S.lineIdx;
+  if(!S.play||!S.dialogues[di])return;
+  _noteCurrentDi=di;
+  const existing=S.notes[di]||{};
+  _noteCurrentColor=existing.color||'';
+  $('note-text').value=existing.text||'';
+  // Mettre à jour les boutons de couleur
+  document.querySelectorAll('.note-color-btn').forEach(btn=>{
+    btn.style.border=btn.dataset.color===_noteCurrentColor?'2px solid var(--ink)':'2px solid transparent';
+    if(!btn.dataset.color)btn.style.border=!_noteCurrentColor?'2px solid var(--ink)':'2px solid transparent';
+  });
+  const cur=S.dialogues[di];
+  $('notes-modal-title').textContent=`Note — ${cur.role}`;
+  // Bouton écoute si enregistrement disponible
+  const recKey=`rec_${S.play?.id}_${di}`;
+  const hasRec=!!localStorage.getItem(recKey);
+  const listenBtn=$('notes-listen-btn');
+  if(listenBtn){listenBtn.style.display=hasRec?'inline-flex':'none';}
+  $('notes-modal').classList.add('show');
+  setTimeout(()=>$('note-text')?.focus(),80);
+}
+function closeNote(){$('notes-modal').classList.remove('show');}
+function selectNoteColor(btn,color){
+  _noteCurrentColor=color;
+  document.querySelectorAll('.note-color-btn').forEach(b=>{
+    b.style.border=b.dataset.color===color?'2px solid var(--ink)':'2px solid transparent';
+  });
+}
+async function saveNote(){
+  const di=_noteCurrentDi;if(di===null)return;
+  const text=$('note-text').value.trim();
+  if(text){S.notes[di]={text,color:_noteCurrentColor};}
+  else{delete S.notes[di];}
+  await DB.put('notes',{id:S.play.id,data:S.notes});
+  closeNote();renderScript();
+  toast(text?'📝 Note sauvegardée':'Note supprimée');
+}
+async function deleteNote(){
+  const di=_noteCurrentDi;if(di===null)return;
+  delete S.notes[di];
+  await DB.put('notes',{id:S.play.id,data:S.notes});
+  closeNote();renderScript();toast('Note supprimée');
+}
+
+// ════ SURLIGNAGE MANUEL ════
+function renderTextWithHighlights(text, di, forSearch){
+  const words = text.split(/(\s+)/);
+  const hlSet = S.highlights[di] || new Set();
+  const q = forSearch && $('search-input')?.value;
+  const re = q && q.length>=2 ? new RegExp('('+q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+')','gi') : null;
+  let wordIdx = 0;
+  return words.map(token => {
+    if(/^\s+$/.test(token)) return esc(token);
+    const wi = wordIdx++;
+    const isHL = hlSet.has(wi);
+    // Highlight recherche dans le token
+    let display = esc(token);
+    if(re){ re.lastIndex=0; display = display.replace(re, '<mark>$1</mark>'); }
+    return `<span class="${isHL?'hl-word':''}" data-di="${di}" data-wi="${wi}"
+      ontouchstart="this._hlt=Date.now()"
+      ontouchend="if(Date.now()-this._hlt>380){event.preventDefault();toggleWordHL(${di},${wi});}"
+      >${display}</span>`;
+  }).join('');
+}
+async function toggleWordHL(di, wi){
+  if(!S.highlights[di]) S.highlights[di] = new Set();
+  if(S.highlights[di].has(wi)) S.highlights[di].delete(wi);
+  else S.highlights[di].add(wi);
+  const data={};
+  Object.entries(S.highlights).forEach(([k,v])=>{data[k]=[...v];});
+  await DB.put('highlights',{id:S.play.id,data});
+  document.querySelectorAll(`[data-di="${di}"][data-wi="${wi}"]`).forEach(s=>s.classList.toggle('hl-word',S.highlights[di].has(wi)));
+}
+async function loadHighlights(playId){
+  const saved = await DB.get('highlights',playId);
+  S.highlights = {};
+  if(saved?.data) Object.entries(saved.data).forEach(([k,v])=>{S.highlights[parseInt(k)]=new Set(v);});
+}
+
+// ════ RECONNAISSANCE VOCALE ════
+let _recoObj=null,_recoRestartCount=0;
+
+function _makeSR(cur){
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR)return null;
+  const r=new SR();
+  r.lang='fr-FR';
+  r.continuous=false;      // false est plus fiable sur Android
+  r.interimResults=true;
+  r.maxAlternatives=3;
+
+  r.onstart=()=>{
+    $('reco-text').textContent='🎙 Écoute…';
+  };
+
+  r.onresult=e=>{
+    S._recoGotResult=true;
+    _recoRestartCount=0; // succès → reset compteur
+    const transcript=e.results[0][0].transcript.trim();
+    $('reco-text').textContent='"'+transcript+'"';
+    if(e.results[0].isFinal){
+      const score=compareTexts(transcript,cur.text);
+      const pct=Math.round(score*100);
+      const stars=pct>=80?'⭐⭐⭐':pct>=50?'⭐⭐':'⭐';
+      $('reco-score').innerHTML=`${stars} ${pct}%`;
+      $('reco-score').style.color=pct>=80?'#3a8c5a':pct>=50?'var(--amber)':'var(--red)';
+      logSession('reco',score);
+      setTimeout(stopReco,2800);
+    }
+  };
+
+  r.onerror=e=>{
+    if(e.error==='no-speech'){
+      // Pas de parole détectée — relancer si pas trop d'essais
+      if(_recoRestartCount<5&&S._recoActive){
+        _recoRestartCount++;
+        $('reco-text').textContent='… rien détecté, parle plus fort';
+        _restartReco(cur);
+      } else {
+        toast('Micro: rien capté — parle plus près du téléphone');stopReco();
+      }
+      return;
+    }
+    if(e.error==='aborted'||e.error==='interrupted')return;
+    if(e.error==='not-allowed'){
+      toast('❌ Permission micro refusée — autorise le micro dans les réglages');stopReco();return;
+    }
+    if(e.error==='network'){
+      toast('❌ Connexion requise pour le micro (Chrome utilise les serveurs Google)');stopReco();return;
+    }
+    toast('Micro: '+e.error);stopReco();
+  };
+
+  r.onend=()=>{
+    // Sur Android: onend se déclenche automatiquement après chaque utterance
+    // Si pas de résultat final encore → relancer
+    if(S._recoActive&&!S._recoGotResult&&_recoRestartCount<8){
+      _recoRestartCount++;
+      _restartReco(cur);
+    }
+  };
+
+  return r;
+}
+
+function _restartReco(cur){
+  try{_recoObj?.abort();}catch{}
+  _recoObj=null;
+  setTimeout(()=>{
+    if(!S._recoActive)return;
+    _recoObj=_makeSR(cur);
+    if(_recoObj)try{_recoObj.start();}catch(e){toast('Micro: '+e.message);stopReco();}
+  },300);
+}
+
+function toggleReco(){
+  if(S._recoActive){stopReco();return;}
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR){
+    toast('🎤 Micro = Chrome Android uniquement (pas Safari)');
+    return;
+  }
+  if(location.protocol==='file:'){
+    toast('❌ Le micro nécessite HTTPS — installe l\'app ou utilise un serveur');
+    return;
+  }
+  const cur=S.dialogues[S.lineIdx];
+  if(!cur||!isMyLine(cur.role)){toast("Va sur l'une de tes répliques d'abord");return;}
+
+  S._recoActive=true;
+  S._recoGotResult=false;
+  _recoRestartCount=0;
+  $('bb-mic').classList.add('active');
+  $('reco-overlay').classList.add('show');
+  $('reco-text').textContent='Parle maintenant…';
+  $('reco-score').textContent='';
+
+  _recoObj=_makeSR(cur);
+  if(!_recoObj){stopReco();return;}
+  try{
+    _recoObj.start();
+  }catch(e){
+    toast('Impossible de démarrer: '+e.message);
+    stopReco();
+  }
+}
+
+function stopReco(){
+  S._recoActive=false;
+  S._recoGotResult=false;
+  _recoRestartCount=0;
+  $('bb-mic').classList.remove('active');
+  $('reco-overlay').classList.remove('show');
+  try{_recoObj?.abort();}catch{}
+  _recoObj=null;
+}
+function compareTexts(spoken,reference){
+  const norm=s=>s.toLowerCase().replace(/[^a-z\u00e0-\u00ff\s]/g,'').trim();
+  const w1=norm(spoken).split(/\s+/).filter(Boolean);
+  const w2=norm(reference).split(/\s+/).filter(Boolean);
+  if(!w1.length||!w2.length)return 0;
+  const set1=new Set(w1);
+  let matches=0;w2.forEach(w=>{if(set1.has(w))matches++;});
+  return matches/Math.max(w1.length,w2.length);
+}
+
+// ════ ENREGISTREMENT VOIX ════
+async function toggleRecording(){
+  if(S._recMediaRecorder?.state==='recording'){stopRecording();return;}
+  try{
+    const stream=await navigator.mediaDevices.getUserMedia({audio:true});
+    S._recChunks=[];S._recPlayId=S.play?.id;S._recStream=stream;
+    S._recMediaRecorder=new MediaRecorder(stream);
+    S._recMediaRecorder.ondataavailable=e=>S._recChunks.push(e.data);
+    S._recMediaRecorder.onstop=saveRecording;
+    S._recMediaRecorder.start();
+    $('bb-rec').classList.add('active');$('rec-indicator').classList.add('show');
+    toast('\u23fa Enregistrement en cours\u2026');
+  }catch(e){toast('Micro non accessible: '+e.message);}
+}
+function stopRecording(){
+  S._recMediaRecorder?.stop();
+  S._recStream?.getTracks().forEach(t=>t.stop());S._recStream=null;
+  $('bb-rec').classList.remove('active');$('rec-indicator').classList.remove('show');
+}
+// saveRecording remplacée par la version Firebase ci-dessous
+function playRecording(di){const key=`rec_${S.play?.id}_${di}`;const data=localStorage.getItem(key);if(!data){playEnreg(key);return;}new Audio(data).play().catch(()=>toast('Impossible de lire'));}
+
+// ════ HISTORIQUE SESSIONS ════
+async function logSession(type,score){
+  if(!S.play)return;
+  const sessions=await DB.get('sessions',S.play.id)||{id:S.play.id,entries:[]};
+  sessions.entries.push({date:Date.now(),mode:S.mode,lineIdx:S.lineIdx,type,score,role:S.myRole});
+  if(sessions.entries.length>300)sessions.entries=sessions.entries.slice(-300);
+  await DB.put('sessions',sessions);
+}
+async function startSession(){
+  if(!S.play)return;
+  S._sessionStart=Date.now();
+  const sessions=await DB.get('sessions',S.play.id)||{id:S.play.id,entries:[]};
+  sessions.entries.push({date:Date.now(),type:'session_start',mode:S.mode,role:S.myRole});
+  await DB.put('sessions',sessions);
+}
+async function getSessionStats(playId){
+  const s=await DB.get('sessions',playId);
+  if(!s?.entries?.length)return null;
+  const starts=s.entries.filter(e=>e.type==='session_start');
+  const recos=s.entries.filter(e=>e.type==='reco');
+  const avg=recos.length?Math.round(recos.reduce((a,e)=>a+(e.score||0),0)/recos.length*100):null;
+  const last=starts.length?new Date(starts[starts.length-1].date):null;
+  return{sessions:starts.length,recos:recos.length,avgScore:avg,lastDate:last};
+}
+
+// ════ BOOKMARKS ════
+async function toggleBookmark(){
+  if(!S.play||!S.dialogues.length)return;
+  const idx=S.lineIdx;
+  const cur=S.dialogues[idx];
+  if(S.bookmarks.has(idx)){
+    S.bookmarks.delete(idx);
+    await DB.del('bookmarks',`${S.play.id}_${idx}`);
+    toast('Marque-page retiré');
+  } else {
+    S.bookmarks.add(idx);
+    // Stocker role+snippet de texte pour remapage robuste après édition
+    await DB.put('bookmarks',{
+      id:`${S.play.id}_${idx}`,
+      playId:S.play.id,
+      lineIdx:idx,
+      role:cur?.role||'',
+      snippet:(cur?.text||'').slice(0,40),
+    });
+    toast('🔖 Marque-page posé');
+  }
+  const el=$('sl-'+idx);if(el)el.classList.toggle('bookmarked',S.bookmarks.has(idx));
+}
+
+// Charger les bookmarks en remappant les index si le script a été édité
+async function loadBookmarks(playId){
+  const bms=await DB.getAll('bookmarks');
+  const mine=bms.filter(b=>b.playId===playId);
+  const result=new Set();
+  const updates=[];
+  mine.forEach(b=>{
+    const atIdx=S.dialogues[b.lineIdx];
+    if(atIdx&&atIdx.role===b.role&&atIdx.text.startsWith((b.snippet||'').slice(0,20))){
+      result.add(b.lineIdx);
+    } else if(b.snippet){
+      const found=S.dialogues.findIndex(d=>d.role===b.role&&d.text.startsWith(b.snippet.slice(0,20)));
+      if(found>=0){
+        result.add(found);
+        const newId=`${playId}_${found}`;
+        updates.push(DB.put('bookmarks',{...b,id:newId,lineIdx:found}));
+        if(b.id!==newId)updates.push(DB.del('bookmarks',b.id));
+      }
+    }
+  });
+  await Promise.all(updates);
+  return result;
+}
+
+// ════ STATS ════
+async function showStats(){
+  if(!S.play)return;
+  const p=S.play,dlg=p.lines.filter(l=>l.type==='dialogue');
+  const totalW=p.roles.reduce((a,r)=>a+(r.wordCount||0),0);
+  // Durée estimée: ~140 mots/min au théâtre
+  const durMin=Math.round(totalW/140);
+  const durStr=durMin>=60?`${Math.floor(durMin/60)}h${String(durMin%60).padStart(2,'0')}`:`${durMin} min`;
+  let html=`<h3 style="font-size:1.08rem;margin-bottom:.22rem">${esc(p.title)}</h3>`;
+  if(p.author)html+=`<p style="font-style:italic;color:var(--ink-3);font-size:.83rem;margin-bottom:.65rem">${esc(p.author)}</p>`;
+  html+=`<p style="font-family:'Courier Prime',monospace;font-size:.67rem;color:var(--ink-3);margin-bottom:.9rem">${dlg.length} RÉPLIQUES · ${p.scenes.length} SCÈNE${p.scenes.length!==1?'S':''} · ${totalW} MOTS · ~${durStr}</p>`;
+  html+=`<table class="stat-table"><tr><th>Personnage</th><th class="num">Répl.</th><th class="num">Mots</th><th class="num">%</th><th class="num">~durée</th></tr>`;
+  p.roles.forEach(r=>{
+    const pct=totalW?Math.round((r.wordCount||0)/totalW*100):0;
+    const rDur=Math.round((r.wordCount||0)/140);
+    html+=`<tr><td><span style="color:${r.color}">●</span> ${esc(r.name)}<div style="width:${pct}%;height:2px;background:${r.color};margin-top:2px;border-radius:1px"></div></td><td class="num">${r.count}</td><td class="num">${r.wordCount||0}</td><td class="num">${pct}%</td><td class="num">${rDur}min</td></tr>`;
+  });
+  html+='</table>';
+  // Heatmap par scènes
+  if(p.scenes.length>0){
+    html+=`<div class="section-label" style="margin-top:.85rem">Heatmap des scènes <span style="font-size:.6rem;font-style:italic;text-transform:none;letter-spacing:0">(tap pour sauter)</span></div>`;
+    const maxDlg=Math.max(...p.scenes.map(sc=>dlg.filter(d=>d.scIdx===sc.idx).length),1);
+    html+=`<div class="heatmap-wrap">`;
+    p.scenes.forEach(sc=>{
+      const cnt=dlg.filter(d=>d.scIdx===sc.idx).length;
+      const pct=cnt/maxDlg;
+      const cls=cnt===0?'hm-0':pct<0.25?'hm-1':pct<0.5?'hm-2':pct<0.75?'hm-3':'hm-4';
+      const label=sc.title.replace(/scène\s*/i,'').slice(0,4)||String(sc.idx+1);
+      html+=`<div class="hm-cell ${cls}" onclick="closeStats();jumpScene(${sc.idx})" title="${esc(sc.title)} — ${cnt} répl.">${label}</div>`;
+    });
+    html+=`</div>`;
+    // Légende durée par scène
+    html+=`<div class="section-label" style="margin-top:.85rem">Par scène</div>`;
+    html+=`<table class="stat-table"><tr><th>Scène</th><th class="num">Répl.</th><th class="num">~durée</th></tr>`;
+    p.scenes.forEach(sc=>{
+      const cnt=dlg.filter(d=>d.scIdx===sc.idx).length;
+      const wc=dlg.filter(d=>d.scIdx===sc.idx).reduce((a,d)=>a+d.text.split(/\s+/).length,0);
+      const scDur=Math.round(wc/140);
+      html+=`<tr><td>${esc(sc.title||'Scène '+(sc.idx+1))}</td><td class="num">${cnt}</td><td class="num">${scDur}min</td></tr>`;
+    });
+    html+='</table>';
+  }
+  // Marque-pages
+  if(S.bookmarks.size>0){
+    html+=`<div class="section-label" style="margin-top:.85rem">Marque-pages</div>`;
+    [...S.bookmarks].sort((a,b)=>a-b).forEach(bi=>{
+      const d=S.dialogues[bi];if(!d)return;const c=p.roles.find(r=>r.name===d.role)?.color||'#8A1818';
+      html+=`<div style="padding:.26rem 0;border-bottom:1px solid var(--line-l);font-size:.81rem;cursor:pointer" onclick="closeStats();jumpLine(${bi})"><span style="font-family:'Courier Prime',monospace;font-size:.63rem;color:${c}">${esc(d.role)}</span><span style="font-style:italic;color:var(--ink-3)"> — ${esc(d.text.slice(0,55))}${d.text.length>55?'…':''}</span></div>`;
+    });
+  }
+  // Notes
+  const noteKeys=Object.keys(S.notes).filter(k=>S.dialogues[parseInt(k)]);
+  if(noteKeys.length){
+    html+=`<div class="section-label" style="margin-top:.85rem">Notes (${noteKeys.length})</div>`;
+    noteKeys.sort((a,b)=>a-b).forEach(k=>{
+      const di=parseInt(k),note=S.notes[di],d=S.dialogues[di];if(!d)return;
+      const c=p.roles.find(r=>r.name===d.role)?.color||'#8A1818';
+      html+=`<div style="padding:.26rem 0;border-bottom:1px solid var(--line-l);font-size:.81rem;cursor:pointer;border-left:3px solid ${note.color||'var(--amber)'};padding-left:.5rem" onclick="closeStats();openNote(${di})">
+        <span style="font-family:'Courier Prime',monospace;font-size:.63rem;color:${c}">${esc(d.role)}</span>
+        <span style="color:var(--ink-3)"> — ${esc(note.text.slice(0,60))}${note.text.length>60?'…':''}</span>
+      </div>`;
+    });
+  }
+  // Mode blanc progressif — boutons de contrôle
+  html+=`<div class="section-label" style="margin-top:.85rem">Mode blanc progressif</div>`;
+  const blancLabels=['0 — Visible','1 — 75%','2 — 50%','3 — 25%','4 — Masqué'];
+  html+=`<div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:.5rem">`;
+  blancLabels.forEach((lbl,i)=>{
+    const active=S.blancLevel===i;
+    html+=`<button class="btn ${active?'primary':''}" style="font-size:.7rem;padding:.28rem .6rem" onclick="S.blancLevel=${i};saveSettings();renderScript();$('stats-modal').classList.remove('show')">${lbl}</button>`;
+  });
+  html+=`</div>`;
+  // Historique sessions
+  const sessStats = await getSessionStats(p.id);
+  if(sessStats){
+    html+=`<div class="section-label" style="margin-top:.85rem">Historique</div>`;
+    html+=`<p style="font-family:'Courier Prime',monospace;font-size:.68rem;color:var(--ink-3);line-height:1.8">`;
+    html+=`Sessions : ${sessStats.sessions}`;
+    if(sessStats.lastDate)html+=` &nbsp;·&nbsp; Dernière : ${sessStats.lastDate.toLocaleDateString('fr',{day:'numeric',month:'short',year:'numeric'})}`;
+    if(sessStats.recos)html+=` &nbsp;·&nbsp; Reconnaissances : ${sessStats.recos} (moy. ${sessStats.avgScore}%)`;
+    html+=`</p>`;
+  }
+  $('stats-body').innerHTML=html;$('stats-modal').classList.add('show');
+}
+function closeStats(){$('stats-modal').classList.remove('show');}
+
+// ════ TOUCH / SWIPE ════
+let tx=0,ty=0,tt=0,lastTap=0;
+const pm=$('play-main');
+pm.addEventListener('touchstart',e=>{if(e.target.closest('#scrubber'))return;tx=e.touches[0].clientX;ty=e.touches[0].clientY;tt=Date.now();},{passive:true});
+pm.addEventListener('touchend',e=>{
+  if(e.target.closest('#scrubber'))return;
+  const dx=e.changedTouches[0].clientX-tx,dy=e.changedTouches[0].clientY-ty,dt=Date.now()-tt;
+  if(Math.abs(dx)>55&&Math.abs(dx)>Math.abs(dy)*1.8&&dt<380){dx<0?navigate(1):navigate(-1);return;}
+  const now=Date.now();
+  if(now-lastTap<300&&dt<200){
+    e.preventDefault(); // empêche zoom iOS sur double-tap
+    togglePlay();
+  }
+  lastTap=now;
+});
+
+// ════ KEYBOARD ════
+document.addEventListener('keydown',e=>{
+  if(!$('screen-play').classList.contains('active'))return;
+  if(['INPUT','TEXTAREA','SELECT'].includes(e.target.tagName))return;
+  if(e.key==='ArrowRight'||e.key==='ArrowDown'){e.preventDefault();navigate(1);}
+  if(e.key==='ArrowLeft'||e.key==='ArrowUp'){e.preventDefault();navigate(-1);}
+  if(e.key===' '){e.preventDefault();togglePlay();}
+  if(e.key==='r'||e.key==='R')revealCurrent();
+  if(e.key==='h'||e.key==='H')hearLine();
+  if(e.key==='b'||e.key==='B')toggleBookmark();
+  if(e.key==='f'||e.key==='F'){e.preventDefault();toggleSearch();}
+  if(e.key==='n'||e.key==='N')openNote();
+  if(e.key==='l'||e.key==='L')toggleLoop();
+  if(e.key==='Escape'){closeSidebar();closeSearch();closeNote();}
+});
+
+// ════ TTS SLIDERS ════
+$('tts-speed').addEventListener('input',e=>$('spd-val').textContent=parseFloat(e.target.value).toFixed(1)+'×');
+$('souffleur-delay').addEventListener('input',e=>$('suf-val').textContent=e.target.value+'s');
+$('line-limit').addEventListener('input',e=>$('lim-val').textContent=e.target.value==='0'?'∞':e.target.value+'s');
+document.addEventListener('DOMContentLoaded',()=>{
+  const acd=$('autochain-delay');
+  if(acd)acd.addEventListener('input',e=>$('acd-val').textContent=parseFloat(e.target.value).toFixed(1)+'×');
+});
+
+// ════ ÉDITEUR ════
+function serializePlay(play){return play.lines.map(l=>{if(l.type==='scene')return'##'+l.text+'##';if(l.type==='direction')return'#'+l.text+'#';return l.role+' : '+l.text;}).join('\n');}
+function parseEditorText(raw,play){
+  const lines=raw.split('\n'),newLines=[],rolesCount={};let scIdx=0,curSc=0,dIdx=0;
+  const push=o=>{o.idx=newLines.length;newLines.push(o);};
+  lines.forEach(l=>{
+    const t=l.trim();if(!t)return;
+    if(/^##.+##$/.test(t)){push({type:'scene',text:t.slice(2,-2).trim(),scIdx});scIdx++;curSc=scIdx-1;return;}
+    if(/^#.+#$/.test(t)){push({type:'direction',text:t.slice(1,-1).trim(),scIdx:curSc});return;}
+    const d=matchDialogue(t);
+    if(d){if(d.inlineDir)push({type:'direction',text:d.inlineDir,scIdx:curSc});push({type:'dialogue',role:d.role,text:d.text,dIdx:dIdx++,scIdx:curSc});rolesCount[d.role]=(rolesCount[d.role]||0)+1;return;}
+    push({type:'direction',text:t,scIdx:curSc});
+  });
+  const oldCol={};play.roles.forEach(r=>oldCol[r.name]=r.color);
+  const roles=Object.entries(rolesCount).sort((a,b)=>b[1]-a[1]).map(([name,count],i)=>{
+    const myLines=newLines.filter(l=>l.type==='dialogue'&&l.role===name);
+    return{name,count,color:oldCol[name]||ROLE_COLORS[i%ROLE_COLORS.length],wordCount:myLines.reduce((a,l)=>a+l.text.split(/\s+/).length,0)};
+  });
+  const sceneLines=newLines.filter(l=>l.type==='scene');
+  const scenes=sceneLines.length?sceneLines.map((sl,i)=>({idx:i,title:sl.text})):[{idx:0,title:'Scène 1'}];
+  return{...play,lines:newLines,roles,scenes};
+}
+function openEditor(){
+  if(!S.play)return;stopAll();
+  $('editor-area').value=serializePlay(S.play);
+  showScreen('editor');
+}
+async function saveEditor(){
+  if(!S.play){toast('Aucune pièce chargée');showScreen('library');return;}
+  const raw=$('editor-area').value.trim();if(!raw){toast('Éditeur vide');return;}
+  loading(true,'Mise à jour…','');await new Promise(r=>setTimeout(r,50));
+  try{
+    const updated=parseEditorText(raw,S.play);
+    const dlg=updated.lines.filter(l=>l.type==='dialogue').length;
+    if(!dlg){loading(false);toast('Aucune réplique trouvée');return;}
+    S.lineIdx=Math.min(S.lineIdx,Math.max(0,dlg-1));
+    await DB.put('plays',updated);const idx=S.plays.findIndex(p=>p.id===updated.id);if(idx>=0)S.plays[idx]=updated;
+    loading(false);await openPlay(updated.id);toast(`✓ ${dlg} répliques · ${updated.roles.length} perso`);
+  }catch(e){loading(false);toast('Erreur : '+e.message);}
+}
+$('btn-editor-back').addEventListener('click',()=>{if(S.play)showScreen('play');else showScreen('library');});
+$('btn-quiz-back').addEventListener('click',()=>{TTS.stop();showScreen(S.play?'play':'library');});
+$('btn-fil-back').addEventListener('click',()=>{showScreen(S.play?'play':'library');});
+$('btn-enreg-back').addEventListener('click',()=>{showScreen(S.play?'play':'library');});
+$('btn-partage-back').addEventListener('click',()=>{showScreen(S.play?'play':'library');});
+
+// ════ CACHE AUDIO PERSISTANT ════
+async function updateCacheStatus(){
+  const el=$('cache-status');if(!el)return;
+  const n=await audioCacheCount();
+  const total=S.dialogues.length;
+  if(n===0){el.textContent='Cache vide';el.style.color='var(--ink-4)';}
+  else if(total>0){
+    const pct=Math.round(Math.min(n,total)/total*100);
+    el.textContent=`${n}/${total} répliques en cache (${pct}%)`;
+    el.style.color=pct>=100?'var(--green)':pct>50?'var(--amber)':'var(--ink-3)';
+  } else {
+    el.textContent=n+' entrées en cache';el.style.color='var(--ink-3)';
+  }
+}
+
+let _prechauffing=false;
+async function prechauffer(){
+  if(_prechauffing)return;
+  if(!S.play){toast('Ouvre une pièce d\'abord');return;}
+  const k=getELKey();if(!k){toast('Configure ta clé ElevenLabs d\'abord');return;}
+  if(!_elVoices.length){toast('Charge d\'abord les voix ElevenLabs');return;}
+
+  // Récupérer toutes les répliques à générer (des partenaires uniquement — les tiennes tu les connais !)
+  // En pratique : générer TOUTES les répliques pour que tout le monde puisse les utiliser
+  const lines=S.play.lines.filter(l=>l.type==='dialogue');
+  if(!lines.length){toast('Aucune réplique');return;}
+
+  _prechauffing=true;
+  $('prechauffe-bar').style.display='block';
+  const fill=$('prechauffe-fill');
+  const txt=$('prechauffe-txt');
+  let done=0,skipped=0,errors=0;
+
+  toast(`Préchauffage de ${lines.length} répliques…`);
+
+  for(const line of lines){
+    const voiceId=S.voiceAssignments[line.role];
+    if(!voiceId){skipped++;done++;continue;}
+    const cacheKey=voiceId+'||'+line.text;
+    // Vérifier si déjà en cache
+    const cached=await audioCacheGet(cacheKey);
+    if(cached){skipped++;done++;fill.style.width=(done/lines.length*100)+'%';continue;}
+    // Générer
+    try{
+      txt.textContent=`Génération : ${line.role} (${done+1}/${lines.length})`;
+      await _elFetch(line.text,voiceId);
+    }catch(e){
+      errors++;console.warn('Préchauffage erreur:',e.message);
+    }
+    done++;
+    fill.style.width=(done/lines.length*100)+'%';
+    // Petite pause pour ne pas saturer l'API
+    await new Promise(r=>setTimeout(r,200));
+  }
+
+  _prechauffing=false;
+  fill.style.width='100%';
+  fill.style.background='var(--green)';
+  const msg=`✓ Cache complet — ${done-skipped-errors} nouvelles · ${skipped} déjà en cache${errors?` · ${errors} erreurs`:''}`;
+  txt.textContent=msg;
+  toast(msg);
+  updateCacheStatus();
+  setTimeout(()=>{$('prechauffe-bar').style.display='none';fill.style.background='var(--amber)';fill.style.width='0%';},4000);
+}
+
+async function clearAudioCache(){
+  if(!confirm('Vider tout le cache audio ?'))return;
+  await audioCacheClear();
+  _audioCache.clear();
+  updateCacheStatus();
+  toast('Cache audio vidé');
+}
+
+// ════ OUTIL 2 : QUIZ DE MÉMORISATION ════
+const QZ = {
+  lines:[],         // répliques du rôle, mélangées
+  idx:0,            // index courant dans lines
+  score:0,          // nb de bonnes réponses
+  streak:0,         // série consécutive
+  maxStreak:0,
+  total:0,          // nb de questions
+  answeredOk:false, // réponse déjà validée pour cette question
+  hiddenWords:[],   // indices des mots cachés dans la réplique courante
+  revealedSet:new Set(), // mots révélés par tap
+};
+
+function openQuiz(){
+  if(!S.play||!S.myRole){toast('Choisis un rôle d\'abord');return;}
+  showScreen('quiz');
+  startQuiz();
+}
+
+function startQuiz(){
+  // Récupérer toutes les répliques du rôle, les mélanger
+  const myLines = S.dialogues.filter(d=>isMyLine(d.role));
+  if(!myLines.length){renderQuizEmpty();return;}
+  // Fisher-Yates shuffle
+  const arr=[...myLines];
+  for(let i=arr.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[arr[i],arr[j]]=[arr[j],arr[i]];}
+  QZ.lines=arr;QZ.idx=0;QZ.score=0;QZ.streak=0;QZ.maxStreak=0;QZ.total=arr.length;QZ.answeredOk=false;
+  renderQuiz();
+}
+
+function renderQuizEmpty(){
+  $('quiz-wrap').innerHTML=`<div style="flex:1;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:.8rem;color:var(--ink-3);text-align:center;padding:2rem">
+    <div style="font-size:3rem">🎭</div>
+    <div style="font-family:'IM Fell English',serif;font-size:1.1rem">Aucune réplique pour ce rôle</div>
+    <div style="font-size:.85rem">Choisis un rôle dans la sidebar</div>
+  </div>`;
+}
+
+function renderQuiz(){
+  if(QZ.idx>=QZ.total){renderQuizEnd();return;}
+  const cur=QZ.lines[QZ.idx];
+  const prev=S.dialogues.find(d=>d.dIdx===cur.dIdx-1);
+  const pct=Math.round(QZ.idx/QZ.total*100);
+  QZ.answeredOk=false;QZ.revealedSet=new Set();
+  // Calculer les mots à cacher (60%)
+  const words=cur.text.split(/(\s+)/);
+  const realWords=words.filter(w=>!/^\s+$/.test(w));
+  const nHide=Math.max(1,Math.round(realWords.length*0.6));
+  // Choisir de façon pseudo-aléatoire basée sur le texte (déterministe par réplique)
+  function qhash(s){let h=5381;for(let i=0;i<s.length;i++)h=((h<<5)+h+s.charCodeAt(i))&0xffffffff;return Math.abs(h);}
+  const indices=[...Array(realWords.length).keys()].sort((a,b)=>qhash(realWords[a]+a)-qhash(realWords[b]+b));
+  QZ.hiddenWords=new Set(indices.slice(0,nHide));
+
+  // Construire l'affichage de la ligne avec les mots cachés
+  let wi=0;
+  const lineHTML=words.map(token=>{
+    if(/^\s+$/.test(token))return token;
+    const i=wi++;
+    if(QZ.hiddenWords.has(i)){
+      const blanks='_'.repeat(Math.max(3,Math.min(token.length,8)));
+      return `<span class="quiz-blank" data-wi="${i}" data-word="${esc(token)}" onclick="revealQuizWord(this)">${blanks}</span>`;
+    }
+    return`<span>${esc(token)}</span>`;
+  }).join('');
+
+  // Générer le badge de badge de score
+  const badge=getBadge();
+  $('quiz-wrap').innerHTML=`
+    <div class="quiz-header-bar">
+      <span style="font-family:'Courier Prime',monospace;font-size:.72rem;color:var(--ink-3)">${QZ.idx+1}/${QZ.total}</span>
+      <span style="font-family:'IM Fell English',serif;font-size:.85rem">${esc(S.myRole)}</span>
+      <span class="quiz-score-badge">${badge} ${QZ.score}/${QZ.idx}</span>
+    </div>
+    <div class="quiz-progress-bar"><div class="quiz-progress-fill" style="width:${pct}%"></div></div>
+    <div class="quiz-body">
+      ${prev?`<div class="quiz-cue">
+        <strong>${esc(prev.role)} :</strong> …${esc(prev.text.split(/\s+/).slice(-6).join(' '))}
+      </div>`:'<div class="quiz-cue" style="border-left-color:var(--amber);color:var(--amber)">Première réplique</div>'}
+      <div class="quiz-line-display" id="qz-line">${lineHTML}</div>
+      <div style="font-size:.75rem;font-family:'Courier Prime',monospace;color:var(--ink-4);margin-top:-.4rem">
+        Tape ta réplique complète — tap sur ___ pour révéler un mot
+      </div>
+      <div class="quiz-input-row">
+        <input type="text" id="qz-input" class="quiz-input" placeholder="Écris ta réplique…"
+          onkeydown="if(event.key==='Enter')checkQuiz()">
+        <button class="btn primary" onclick="checkQuiz()" style="white-space:nowrap;padding:.5rem .75rem">✓ Valider</button>
+      </div>
+      <div class="quiz-result" id="qz-result"></div>
+      <div style="display:none;gap:.45rem;flex-direction:column" id="qz-next-btns">
+        <button class="btn" onclick="hearQuizLine()" style="font-size:.82rem">🔊 Écouter</button>
+        <button class="btn primary" onclick="nextQuiz()" style="font-size:.82rem">Suivante →</button>
+      </div>
+    </div>`;
+  // Focus sur l'input
+  setTimeout(()=>$('qz-input')?.focus(), 150);
+}
+
+function revealQuizWord(span){
+  const wi=parseInt(span.dataset.wi);
+  const word=span.dataset.word;
+  QZ.revealedSet.add(wi);
+  span.textContent=word;
+  span.classList.add('revealed');
+}
+
+function checkQuiz(){
+  if(QZ.answeredOk)return; // déjà validé, attendre nextQuiz
+  const cur=QZ.lines[QZ.idx];
+  const input=$('qz-input');
+  const typed=(input?.value||'').trim();
+  if(!typed){toast('Écris ta réplique !');return;}
+  const result=$('qz-result');
+  const nextBtns=$('qz-next-btns');
+
+  // Comparer : nettoyage ponctuation + casse
+  const norm=s=>s.toLowerCase().replace(/[«»""''.,;:!?…\-–—()\[\]]/g,' ').replace(/\s+/g,' ').trim();
+  const typedN=norm(typed);
+  const refN=norm(cur.text);
+  // Score de similarité
+  const score=quizSimilarity(typedN,refN);
+  const isOk=score>=0.75; // 75% de similarité → correct
+
+  QZ.answeredOk=isOk;
+
+  if(isOk){
+    QZ.score++;QZ.streak++;QZ.maxStreak=Math.max(QZ.maxStreak,QZ.streak);
+    input.classList.add('correct-input');
+    result.className='quiz-result show ok';
+    const streakMsg=QZ.streak>=3?` 🔥 Série de ${QZ.streak} !`:'';
+    result.innerHTML=`<span class="quiz-badge">${score>=0.95?'🏆':score>=0.85?'⭐':'✓'}</span>
+      Bonne réponse !${streakMsg}<br>
+      <span style="font-size:.82rem;color:var(--ink-3);font-style:italic">${esc(cur.text)}</span>`;
+    // Révéler tous les mots cachés en vert
+    document.querySelectorAll('.quiz-blank').forEach(b=>{
+      b.textContent=b.dataset.word;b.classList.add('correct');
+    });
+  } else {
+    QZ.streak=0;
+    input.classList.add('wrong-input');
+    result.className='quiz-result show ko';
+    // Calculer les mots faux
+    result.innerHTML=`<span class="quiz-badge">✗</span>
+      ${score>=0.5?'Presque ! ('+Math.round(score*100)+'%)':'À retravailler…'}<br>
+      <span style="font-size:.82rem;color:var(--ink-2)">${esc(cur.text)}</span>`;
+    // Révéler tous les mots en rouge
+    document.querySelectorAll('.quiz-blank').forEach(b=>{
+      b.textContent=b.dataset.word;b.classList.add('wrong');
+    });
+  }
+
+  result.style.display='block';
+  if(nextBtns)nextBtns.style.display='flex';
+  // Avancer auto si bonne réponse et pas le dernier
+  if(isOk&&QZ.idx<QZ.total-1){
+    setTimeout(nextQuiz, 1800);
+  }
+}
+
+function hearQuizLine(){
+  const cur=QZ.lines[QZ.idx];if(!cur)return;
+  TTS.speakRole(cur.text,cur.role,{});
+}
+
+function nextQuiz(){
+  QZ.idx++;
+  renderQuiz();
+}
+
+function renderQuizEnd(){
+  const pct=Math.round(QZ.score/QZ.total*100);
+  const stars=pct>=90?'🌟🌟🌟':pct>=70?'⭐⭐⭐':pct>=50?'⭐⭐':'⭐';
+  const msg=pct>=90?'Impeccable ! Tu connais ton texte.':pct>=70?'Très bien, continue !':pct>=50?'Bon début, réentraîne-toi !':'Reprends le script et réessaie.';
+  const streakTxt=QZ.maxStreak>=3?`<div style="font-size:.85rem;color:var(--amber);margin-top:.3rem">🔥 Meilleure série : ${QZ.maxStreak}</div>`:'';
+  $('quiz-wrap').innerHTML=`<div class="quiz-end-screen">
+    <div class="quiz-stars">${stars}</div>
+    <div class="quiz-big-score">${QZ.score}/${QZ.total}</div>
+    <div style="font-family:'IM Fell English',serif;font-size:1.15rem">${msg}</div>
+    <div style="font-family:'Courier Prime',monospace;font-size:.75rem;color:var(--ink-3)">${pct}% de bonnes réponses</div>
+    ${streakTxt}
+    <button class="btn primary" onclick="startQuiz()" style="margin-top:.8rem;font-size:.85rem">↺ Recommencer</button>
+    <button class="btn" onclick="showScreen('play')" style="font-size:.85rem">← Retour au script</button>
+  </div>`;
+}
+
+function quizSimilarity(a,b){
+  // Jaccard sur les mots
+  const wa=new Set(a.split(/\s+/).filter(Boolean));
+  const wb=new Set(b.split(/\s+/).filter(Boolean));
+  const inter=[...wa].filter(w=>wb.has(w)).length;
+  const union=new Set([...wa,...wb]).size;
+  return union?inter/union:0;
+}
+
+function getBadge(){
+  if(QZ.idx===0)return'🎭';
+  const pct=QZ.score/QZ.idx;
+  return pct>=0.9?'🏆':pct>=0.7?'⭐':pct>=0.5?'🎯':'💪';
+}
+
+// ════ OUTIL 2 : MODE ENFANT ════
+function toggleKidMode(){
+  const on=document.body.classList.toggle('kid-mode');
+  localStorage.setItem('it.kidmode', on?'1':'0');
+  $('btn-kid-mode').classList.toggle('active', on);
+  toast(on?'👶 Mode enfant activé':'Mode enfant désactivé');
+}
+function initKidMode(){
+  if(localStorage.getItem('it.kidmode')==='1'){
+    document.body.classList.add('kid-mode');
+    const btn=$('btn-kid-mode');if(btn)btn.classList.add('active');
+  }
+}
+
+// ════ OUTIL 3 : MINUTEUR DE SCÈNE ════
+let _timerInt=null, _timerSec=0, _timerRunning=false, _timerLongT=null;
+
+function toggleTimer(){
+  if(_timerRunning){
+    clearInterval(_timerInt);_timerRunning=false;
+    $('timer-display').classList.remove('running');
+    $('timer-display').classList.add('stopped');
+  } else {
+    _timerRunning=true;
+    $('timer-display').classList.add('running');
+    $('timer-display').classList.remove('stopped');
+    _timerInt=setInterval(()=>{_timerSec++;updateTimerDisplay();},1000);
+  }
+}
+function resetTimer(){
+  clearInterval(_timerInt);_timerRunning=false;_timerSec=0;
+  updateTimerDisplay();
+  $('timer-display').classList.remove('running');
+  $('timer-display').classList.add('stopped');
+  toast('Minuteur réinitialisé');
+}
+function updateTimerDisplay(){
+  const el=$('timer-display');if(!el)return;
+  const m=Math.floor(_timerSec/60).toString().padStart(2,'0');
+  const s=(_timerSec%60).toString().padStart(2,'0');
+  el.textContent=m+':'+s;
+}
+// Long-press pour reset
+document.addEventListener('DOMContentLoaded',()=>{
+  const td=$('timer-display');
+  if(!td)return;
+  td.addEventListener('touchstart',()=>{_timerLongT=setTimeout(resetTimer,700);},{passive:true});
+  td.addEventListener('touchend',()=>clearTimeout(_timerLongT),{passive:true});
+  td.addEventListener('mousedown',()=>{_timerLongT=setTimeout(resetTimer,700);});
+  td.addEventListener('mouseup',()=>clearTimeout(_timerLongT));
+});
+
+// ════ OUTIL 4 : FIL ROUGE ════
+function openFilRouge(){
+  if(!S.play||!S.myRole){toast('Choisis un rôle d\'abord');return;}
+  showScreen('fil-rouge');
+  renderFilRouge();
+}
+function renderFilRouge(){
+  const myLines=S.dialogues.filter(d=>isMyLine(d.role));
+  $('fil-title').textContent=`Fil rouge — ${S.myRole} (${myLines.length} répliques)`;
+  if(!myLines.length){
+    $('fil-list').innerHTML='<div style="padding:1.5rem;text-align:center;color:var(--ink-3)">Aucune réplique pour ce rôle</div>';
+    return;
+  }
+  const roleMap={};S.play.roles.forEach(r=>{roleMap[r.name]=r.color;});
+  $('fil-list').innerHTML=myLines.map(d=>{
+    const prev=S.dialogues.find(x=>x.dIdx===d.dIdx-1);
+    const bm=S.bookmarks.has(d.dIdx)?'bookmarked':'';
+    return`<div class="fil-line ${bm}" onclick="jumpToFilLine(${d.dIdx})">
+      ${prev?`<div class="fil-cue"><span style="color:${roleMap[prev.role]||'#888'}">${esc(prev.role)}</span> : …${esc(prev.text.split(/\s+/).slice(-5).join(' '))}</div>`:''}
+      <div class="fil-text">${esc(d.text)}</div>
+    </div>`;
+  }).join('');
+}
+function jumpToFilLine(di){
+  showScreen('play');
+  S.lineIdx=di;_nav();
+  toast('Réplique '+di);
+}
+
+// ════ OUTIL 5 : EXPORT MON TEXTE ════
+function exportMonTexte(){
+  if(!S.play||!S.myRole){toast('Choisis un rôle d\'abord');return;}
+  const myLines=S.dialogues.filter(d=>isMyLine(d.role));
+  if(!myLines.length){toast('Aucune réplique pour ce rôle');return;}
+  let txt=`${S.play.title}\n`;
+  if(S.play.author)txt+=`${S.play.author}\n`;
+  txt+=`Rôle : ${S.myRole}\n`;
+  txt+='─'.repeat(40)+'\n\n';
+  myLines.forEach(d=>{
+    const prev=S.dialogues.find(x=>x.dIdx===d.dIdx-1);
+    if(prev){
+      const cue='…'+prev.text.split(/\s+/).slice(-3).join(' ');
+      txt+=`  [${prev.role} : ${cue}]\n`;
+    } else {
+      txt+='  [Début]\n';
+    }
+    txt+=`${S.myRole} : ${d.text}\n\n`;
+  });
+  const blob=new Blob([txt],{type:'text/plain;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  Object.assign(document.createElement('a'),{href:url,download:`${S.myRole}_${S.play.title}.txt`}).click();
+  URL.revokeObjectURL(url);
+  toast('✓ Texte exporté');
+}
+
+// ════ OUTIL 7 : PARTAGE DE SESSION ════
+function openPartage(){
+  if(!S.play){toast('Ouvre une pièce d\'abord');return;}
+  showScreen('partage');
+  renderPartage();
+}
+function renderPartage(){
+  const p=S.play;
+  const dlg=p.lines.filter(l=>l.type==='dialogue').length;
+  const prog=Math.round((S.lineIdx/Math.max(S.dialogues.length,1))*100);
+  const code=localStorage.getItem('it.session_code')||'';
+  $('partage-body').innerHTML=`
+    <div>
+      <div class="section-label">Pièce en cours</div>
+      <div style="background:var(--paper-d);padding:.7rem .9rem;border-radius:2px">
+        <div style="font-family:'IM Fell English',serif;font-size:1.05rem;margin-bottom:.25rem">${esc(p.title)}</div>
+        <div style="font-family:'Courier Prime',monospace;font-size:.68rem;color:var(--ink-3)">
+          ${dlg} répliques · ${p.roles.length} personnages · ${prog}% parcouru
+        </div>
+        <div style="margin-top:.5rem;font-size:.82rem;color:var(--ink-3)">
+          Rôle actuel : <strong>${esc(S.myRole||'—')}</strong>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="section-label">Code de session</div>
+      <div style="font-size:.8rem;color:var(--ink-3);margin-bottom:.5rem">
+        Génère un code à partager avec ta troupe pour identifier cette session.
+      </div>
+      ${code
+        ?`<div class="session-code" onclick="copySessionCode('${code}')" title="Tap pour copier">${code}</div>
+          <div style="font-size:.72rem;color:var(--ink-4);text-align:center;font-family:'Courier Prime',monospace">Tap pour copier · <span style="cursor:pointer;color:var(--red)" onclick="generateSessionCode()">Nouveau code</span></div>`
+        :`<button class="btn primary" style="width:100%" onclick="generateSessionCode()">🎲 Générer un code</button>`
+      }
+    </div>
+    <div>
+      <div class="section-label">Rejoindre une session</div>
+      <div style="display:flex;gap:.45rem">
+        <input type="text" id="join-code-input" class="txt-input" placeholder="Ex: THÉÂTRE123" style="flex:1;text-transform:uppercase;font-family:'Courier Prime',monospace;font-size:.9rem">
+        <button class="btn primary" onclick="joinSession()">Rejoindre</button>
+      </div>
+    </div>
+    ${code?`<div style="font-family:'Courier Prime',monospace;font-size:.68rem;color:var(--ink-3);text-align:center;padding:.5rem 0">Session active : <strong>${code}</strong></div>`:''}
+  `;
+}
+function generateSessionCode(){
+  const words=['THÉÂTRE','SCÈNE','RIDEAU','ACTEUR','RAMPE','PLATEAU','COULISSE','TEXTE','RÉPLIQUE','TROUPE'];
+  const w=words[Math.floor(Math.random()*words.length)];
+  const n=Math.floor(100+Math.random()*900);
+  const code=w+n;
+  localStorage.setItem('it.session_code',code);
+  renderPartage();
+  toast('Code : '+code);
+}
+function copySessionCode(code){
+  navigator.clipboard?.writeText(code).then(()=>toast('Code copié !')).catch(()=>toast(code));
+}
+function joinSession(){
+  const code=($('join-code-input')?.value||'').trim().toUpperCase();
+  if(!code){toast('Entre un code');return;}
+  localStorage.setItem('it.session_code',code);
+  toast('Session rejointe : '+code);
+  renderPartage();
+}
+
+// ════ OUTIL 8 : ENREGISTREMENTS ════
+function openEnregistrements(){
+  showScreen('enreg');
+  renderEnregistrements();
+}
+function renderEnregistrements(){
+  const list=$('enreg-list');
+  const keys=[];
+  for(let i=0;i<localStorage.length;i++){
+    const k=localStorage.key(i);
+    if(k&&k.startsWith('rec_'))keys.push(k);
+  }
+  keys.sort();
+  if(!keys.length){
+    list.innerHTML='<div style="padding:2rem;text-align:center;color:var(--ink-3)"><div style="font-size:2.5rem;margin-bottom:.6rem">🎙️</div>Aucun enregistrement<br><span style="font-size:.82rem">Enregistre tes répliques avec le bouton ⏺️</span></div>';
+    return;
+  }
+  list.innerHTML=keys.map((k,i)=>{
+    const parts=k.replace('rec_','').split('_');
+    const playId=parts.slice(0,-1).join('_');
+    const di=parts[parts.length-1];
+    const play=S.plays.find(p=>p.id===playId);
+    const playName=play?play.title:'Pièce inconnue';
+    const dlg=play?.lines.filter(l=>l.type==='dialogue')[parseInt(di)];
+    const label=dlg?`${dlg.role} : "${dlg.text.slice(0,40)}${dlg.text.length>40?'…':''}"`:('Réplique '+di);
+    return`<div style="display:flex;align-items:flex-start;gap:.55rem;padding:.65rem .7rem;border-bottom:1px solid var(--line-l)">
+      <div style="flex:1">
+        <div style="font-size:.78rem;font-family:'IM Fell English',serif">${esc(label)}</div>
+        <div style="font-size:.65rem;font-family:'Courier Prime',monospace;color:var(--ink-4);margin-top:.15rem">${esc(playName)}</div>
+      </div>
+      <button class="bb-btn" style="width:36px;height:36px;font-size:.85rem;flex-shrink:0" onclick="playEnreg('${k}')" title="Écouter">▶</button>
+      <button class="bb-btn" style="width:36px;height:36px;font-size:.85rem;flex-shrink:0" onclick="deleteEnreg('${k}')" title="Supprimer">✕</button>
+    </div>`;
+  }).join('');
+}
+function playEnreg(key){
+  const data=localStorage.getItem(key);
+  if(!data){toast('Introuvable');return;}
+  new Audio(data).play().catch(()=>toast('Impossible de lire'));
+}
+function deleteEnreg(key){
+  if(!confirm('Supprimer cet enregistrement ?'))return;
+  localStorage.removeItem(key);
+  renderEnregistrements();
+  toast('Enregistrement supprimé');
+}
+function clearAllRecordings(){
+  if(!confirm('Supprimer TOUS les enregistrements ?'))return;
+  const keys=[];
+  for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k?.startsWith('rec_'))keys.push(k);}
+  keys.forEach(k=>localStorage.removeItem(k));
+  renderEnregistrements();
+  toast('Tous les enregistrements supprimés');
+}
+
+// ════ OUTIL 9 : GUIDE DE BIENVENUE ════
+const WELCOME_STEPS=[
+  {icon:'📂',title:'Importe ton script',body:'Appuie sur <strong>＋ Importer</strong> et choisis un fichier PDF, DOCX ou TXT — ou colle directement le texte. L\'app détecte automatiquement les personnages et les scènes.'},
+  {icon:'🎭',title:'Choisis ton rôle',body:'Ouvre le menu <strong>☰</strong> et tap sur ton personnage dans <em>Mon rôle</em>. Tes répliques apparaissent surlignées. Tu peux aussi activer plusieurs rôles avec un appui long.'},
+  {icon:'▶',title:'Lance l\'italienne',body:'Appuie sur <strong>▶</strong> — l\'app lit les répliques des partenaires. Sur <strong>Mon texte (TTS)</strong>, choisis <em>Silence</em> pour jouer seul, ou <em>Avant</em> pour entendre ta réplique avant de la dire.<br>Active <strong>Auto-enchaîner</strong> pour une flow continue.'},
+  {icon:'🛠️',title:'Tous les outils',body:'<strong>🎮 Quiz</strong> pour mémoriser · <strong>🧵 Fil rouge</strong> pour tes répliques seules · <strong>🌙 Mode sombre</strong> pour les coulisses · <strong>👶 Mode enfant</strong> pour agrandir l\'interface · <strong>00:00</strong> pour le minuteur de scène.'},
+];
+let _welcomeStep=0;
+function showWelcome(){
+  _welcomeStep=0;
+  renderWelcomeStep();
+  $('welcome-ovl').classList.add('show');
+}
+function renderWelcomeStep(){
+  const step=WELCOME_STEPS[_welcomeStep];
+  const dots=WELCOME_STEPS.map((_,i)=>`<div class="welcome-dot${i===_welcomeStep?' active':''}"></div>`).join('');
+  $('welcome-card').innerHTML=`
+    <span class="welcome-step-icon">${step.icon}</span>
+    <h2 style="font-size:1.25rem;margin-bottom:.6rem">${step.title}</h2>
+    <p style="font-size:.92rem;color:var(--ink-2);line-height:1.7">${step.body}</p>
+    <div class="welcome-dots">${dots}</div>
+    <div style="display:flex;gap:.6rem;margin-top:.7rem">
+      ${_welcomeStep>0?'<button class="btn" onclick="welcomePrev()" style="font-size:.82rem">← Préc.</button>':''}
+      <button class="btn primary" style="flex:1;font-size:.88rem" onclick="welcomeNext()">
+        ${_welcomeStep<WELCOME_STEPS.length-1?'Suivant →':'✓ Commencer !'}
+      </button>
+    </div>
+    <div style="text-align:center;margin-top:.6rem">
+      <button style="background:none;border:none;cursor:pointer;font-size:.72rem;color:var(--ink-4);font-family:'Courier Prime',monospace" onclick="closeWelcome()">Passer le guide</button>
+    </div>`;
+}
+function welcomeNext(){
+  if(_welcomeStep<WELCOME_STEPS.length-1){_welcomeStep++;renderWelcomeStep();}
+  else closeWelcome();
+}
+function welcomePrev(){if(_welcomeStep>0){_welcomeStep--;renderWelcomeStep();}}
+function closeWelcome(){
+  $('welcome-ovl').classList.remove('show');
+  localStorage.setItem('it.welcomed','1');
+}
+function initWelcome(){
+  if(!localStorage.getItem('it.welcomed'))setTimeout(showWelcome,800);
+}
+
+// ════ OUTIL 1 : MODE SOMBRE ════
+function toggleDarkMode(){
+  const on = document.body.classList.toggle('dark-mode');
+  localStorage.setItem('it.darkmode', on ? '1' : '0');
+  $('btn-dark-mode').classList.toggle('active', on);
+  // Mettre à jour meta theme-color
+  document.querySelector('meta[name=theme-color]').content = on ? '#1A1612' : '#F4EEE4';
+}
+function initDarkMode(){
+  if(localStorage.getItem('it.darkmode') === '1'){
+    document.body.classList.add('dark-mode');
+    const btn = $('btn-dark-mode');
+    if(btn) btn.classList.add('active');
+    document.querySelector('meta[name=theme-color]').content = '#1A1612';
+  }
+}
+
+// ════ FIREBASE ════
+const FB_CONFIG = {
+  apiKey:            "AIzaSyD6iOgKg_8cQiXzGPSiWDVaXU2ey02nqJk",
+  authDomain:        "italienne-33180.firebaseapp.com",
+  projectId:         "italienne-33180",
+  storageBucket:     "italienne-33180.firebasestorage.app",
+  messagingSenderId: "922390053139",
+  databaseURL:       "https://italienne-33180-default-rtdb.europe-west1.firebasedatabase.app",
+  appId:             "1:922390053139:web:a4d1ee1fc0b29fc12a9ae6",
+};
+
+let FB = null;        // firebase.database()
+let FB_ST = null;     // firebase.storage()
+let FB_UID = null;    // identifiant unique de l'appareil (généré une fois)
+
+function fbInit(){
+  try{
+    if(!firebase.apps.length) firebase.initializeApp(FB_CONFIG);
+    FB    = firebase.database();
+    FB_ST = firebase.storage();
+    // Identifiant appareil persistant (pas d'auth = anonyme mais stable)
+    FB_UID = localStorage.getItem('it.fb_uid');
+    if(!FB_UID){
+      FB_UID = 'dev_'+Math.random().toString(36).slice(2,10)+Date.now().toString(36);
+      localStorage.setItem('it.fb_uid',FB_UID);
+    }
+    console.log('[Firebase] connecté, uid='+FB_UID);
+    updateFBStatus(true);
+  }catch(e){
+    console.warn('[Firebase] init échouée:',e.message);
+    FB=null;FB_ST=null;
+    updateFBStatus(false);
+  }
+}
+
+function updateFBStatus(ok){
+  // Indicateur visuel dans la sidebar partage
+  const el=$('fb-status-dot');
+  if(!el)return;
+  el.style.background=ok?'var(--green)':'var(--ink-4)';
+  el.title=ok?'Firebase connecté':'Hors ligne — données locales uniquement';
+}
+
+// ── Chemin de base pour cet utilisateur
+function fbPath(...parts){ return ['users',FB_UID,...parts].join('/'); }
+// Chemin partagé (session code visible par la troupe)
+function fbSharedPath(code,...parts){ return ['sessions',code,...parts].join('/'); }
+
+// ════ SYNC PIÈCES ════
+// Envoyer une pièce dans Firebase (à l'import)
+async function fbUploadPlay(play){
+  if(!FB)return;
+  try{
+    // On ne stocke que les métadonnées + lines (pas les blobs audio)
+    const payload={
+      id:play.id, title:play.title, author:play.author||'',
+      roles:play.roles, scenes:play.scenes,
+      lines:play.lines,
+      importedAt:play.importedAt||Date.now(),
+      uploadedBy:FB_UID,
+    };
+    await FB.ref(fbPath('plays',play.id)).set(payload);
+    toast('☁ Pièce sauvegardée dans le cloud');
+  }catch(e){ console.warn('fbUploadPlay:',e.message); }
+}
+
+// Télécharger une pièce depuis Firebase (via code session)
+async function fbDownloadPlay(playId){
+  if(!FB)throw new Error('Firebase non connecté');
+  const snap = await FB.ref(fbPath('plays',playId)).once('value');
+  if(!snap.exists()) throw new Error('Pièce introuvable');
+  return snap.val();
+}
+
+// Liste des pièces disponibles dans Firebase pour cet utilisateur
+async function fbListPlays(){
+  if(!FB)return [];
+  try{
+    const snap=await FB.ref(fbPath('plays')).once('value');
+    if(!snap.exists())return [];
+    return Object.values(snap.val()||{});
+  }catch(e){ return []; }
+}
+
+// ════ SYNC PROGRESSION ════
+async function fbSaveProgress(playId, lineIdx){
+  if(!FB)return;
+  try{
+    await FB.ref(fbPath('progress',playId)).set({lineIdx, updatedAt:Date.now(), role:S.myRole||''});
+  }catch{}
+}
+
+// ════ SYNC ENREGISTREMENTS AUDIO ════
+async function fbUploadRecording(blob, key){
+  if(!FB_ST)return null;
+  try{
+    const ref = FB_ST.ref(`recordings/${FB_UID}/${key}.webm`);
+    await ref.put(blob, {contentType:'audio/webm'});
+    const url = await ref.getDownloadURL();
+    // Stocker la référence dans DB
+    await FB.ref(fbPath('recordings',key)).set({url, uploadedAt:Date.now(), key});
+    return url;
+  }catch(e){ console.warn('fbUploadRecording:',e.message); return null; }
+}
+
+async function fbGetRecordingURL(key){
+  if(!FB)return null;
+  try{
+    const snap=await FB.ref(fbPath('recordings',key)).once('value');
+    return snap.val()?.url||null;
+  }catch{ return null; }
+}
+
+async function fbListRecordings(){
+  if(!FB)return {};
+  try{
+    const snap=await FB.ref(fbPath('recordings')).once('value');
+    return snap.val()||{};
+  }catch{ return {}; }
+}
+
+async function fbDeleteRecording(key){
+  if(!FB)return;
+  try{
+    await FB.ref(fbPath('recordings',key)).remove();
+    if(FB_ST){
+      await FB_ST.ref(`recordings/${FB_UID}/${key}.webm`).delete().catch(()=>{});
+    }
+  }catch{}
+}
+
+// ════ SYNC SESSION / TROUPE ════
+// Publier un code de session avec les infos de la pièce
+async function fbCreateSession(code, playId){
+  if(!FB)return;
+  try{
+    await FB.ref(fbSharedPath(code)).set({
+      playId, createdBy:FB_UID, createdAt:Date.now(),
+      title: S.play?.title||'', roles: S.play?.roles?.map(r=>r.name)||[],
+    });
+    // Écouter les rejoins
+    FB.ref(fbSharedPath(code,'members')).on('value', snap=>{
+      const members = snap.val()||{};
+      const count = Object.keys(members).length;
+      const el=$('session-members-count');
+      if(el) el.textContent = count+' membre'+(count!==1?'s':'');
+    });
+    toast('☁ Session partagée dans le cloud');
+  }catch(e){ toast('Erreur session: '+e.message); }
+}
+
+// Rejoindre une session existante
+async function fbJoinSession(code){
+  if(!FB)return false;
+  try{
+    const snap=await FB.ref(fbSharedPath(code)).once('value');
+    if(!snap.exists())return false;
+    // Enregistrer notre présence
+    await FB.ref(fbSharedPath(code,'members',FB_UID)).set({
+      joinedAt:Date.now(), role:S.myRole||'', uid:FB_UID
+    });
+    return snap.val();
+  }catch{ return false; }
+}
+
+// ════ FONCTIONS MISES À JOUR ════
+
+// saveRecording — upload Firebase en plus du localStorage
+async function saveRecording(){
+  if(!S._recChunks.length)return;
+  const blob=new Blob(S._recChunks,{type:'audio/webm'});
+  const di=S.lineIdx;
+  const key=`rec_${S._recPlayId}_${di}`;
+  const reader=new FileReader();
+  reader.onload=async()=>{
+    // 1. Sauvegarder localement
+    try{ localStorage.setItem(key,reader.result); }catch{}
+    // 2. Upload Firebase en arrière-plan
+    if(FB_ST){
+      fbUploadRecording(blob,key).then(url=>{
+        if(url) toast('✓ Enregistré localement + cloud ☁');
+        else toast('✓ Enregistré localement');
+      });
+    } else {
+      toast('✓ Enregistrement sauvegardé');
+    }
+    // 3. Note visuelle
+    if(!S.notes[di]){
+      S.notes[di]={text:'🎙 Enregistrement',color:'#87CEEB'};
+      await DB.put('notes',{id:S.play.id,data:S.notes});
+      renderScript();
+    }
+  };
+  reader.onerror=()=>{
+    // Si base64 échoue (blob trop gros) → direct Firebase
+    if(FB_ST){
+      fbUploadRecording(blob,key).then(url=>{
+        if(url) toast('☁ Enregistrement sauvegardé dans le cloud');
+        else{ const u=URL.createObjectURL(blob);Object.assign(document.createElement('a'),{href:u,download:`replique_${di}.webm`}).click();URL.revokeObjectURL(u); }
+      });
+    }
+  };
+  reader.readAsDataURL(blob);
+}
+
+// renderEnregistrements — affiche local + Firebase
+async function renderEnregistrements(){
+  const list=$('enreg-list');
+  list.innerHTML='<div style="padding:1rem;text-align:center;color:var(--ink-3);font-size:.82rem">Chargement…</div>';
+
+  // Local
+  const localKeys=[];
+  for(let i=0;i<localStorage.length;i++){
+    const k=localStorage.key(i);if(k?.startsWith('rec_'))localKeys.push(k);
+  }
+
+  // Firebase
+  const fbRecs = await fbListRecordings();
+  const fbKeys = Object.keys(fbRecs);
+
+  // Fusionner (local prioritaire)
+  const allKeys = [...new Set([...localKeys,...fbKeys])].sort();
+
+  if(!allKeys.length){
+    list.innerHTML='<div style="padding:2rem;text-align:center;color:var(--ink-3)"><div style="font-size:2.5rem;margin-bottom:.6rem">🎙️</div>Aucun enregistrement<br><span style="font-size:.82rem">Enregistre tes répliques avec le bouton ⏺️</span></div>';
+    return;
+  }
+  list.innerHTML=allKeys.map(k=>{
+    const parts=k.replace('rec_','').split('_');
+    const playId=parts.slice(0,-1).join('_');
+    const di=parts[parts.length-1];
+    const play=S.plays.find(p=>p.id===playId);
+    const playName=play?play.title:'Pièce inconnue';
+    const dlg=play?.lines.filter(l=>l.type==='dialogue')[parseInt(di)];
+    const label=dlg?`${dlg.role} : "${dlg.text.slice(0,40)}${dlg.text.length>40?'…':''}"`:('Réplique '+di);
+    const isCloud=fbKeys.includes(k)&&!localKeys.includes(k);
+    const isLocal=localKeys.includes(k);
+    const badge=fbKeys.includes(k)?'☁':'📱';
+    return`<div style="display:flex;align-items:flex-start;gap:.55rem;padding:.65rem .7rem;border-bottom:1px solid var(--line-l)">
+      <div style="flex:1">
+        <div style="font-size:.78rem;font-family:'IM Fell English',serif">${esc(label)}</div>
+        <div style="font-size:.65rem;font-family:'Courier Prime',monospace;color:var(--ink-4);margin-top:.15rem">${badge} ${esc(playName)}</div>
+      </div>
+      <button class="bb-btn" style="width:36px;height:36px;font-size:.85rem;flex-shrink:0" onclick="playEnreg('${k}')" title="Écouter">▶</button>
+      <button class="bb-btn" style="width:36px;height:36px;font-size:.85rem;flex-shrink:0" onclick="deleteEnreg('${k}')" title="Supprimer">✕</button>
+    </div>`;
+  }).join('');
+}
+
+// playEnreg — local d'abord, Firebase si absent
+async function playEnreg(key){
+  const local=localStorage.getItem(key);
+  if(local){ new Audio(local).play().catch(()=>toast('Impossible de lire')); return; }
+  // Essayer Firebase
+  const url=await fbGetRecordingURL(key);
+  if(url){ new Audio(url).play().catch(()=>toast('Impossible de lire')); }
+  else toast('Enregistrement introuvable');
+}
+
+// deleteEnreg — supprime local + Firebase
+async function deleteEnreg(key){
+  if(!confirm('Supprimer cet enregistrement ?'))return;
+  localStorage.removeItem(key);
+  await fbDeleteRecording(key);
+  renderEnregistrements();
+  toast('Enregistrement supprimé');
+}
+
+// generateSessionCode — crée aussi la session Firebase
+async function generateSessionCode(){
+  const words=['THÉÂTRE','SCÈNE','RIDEAU','ACTEUR','RAMPE','PLATEAU','COULISSE','TEXTE','RÉPLIQUE','TROUPE'];
+  const w=words[Math.floor(Math.random()*words.length)];
+  const n=Math.floor(100+Math.random()*900);
+  const code=w+n;
+  localStorage.setItem('it.session_code',code);
+  if(S.play && FB) await fbCreateSession(code, S.play.id);
+  renderPartage();
+  toast('Code : '+code);
+}
+
+// joinSession — récupère les infos de la pièce depuis Firebase si disponible
+async function joinSession(){
+  const code=($('join-code-input')?.value||'').trim().toUpperCase();
+  if(!code){toast('Entre un code');return;}
+  localStorage.setItem('it.session_code',code);
+  if(FB){
+    const sessionData = await fbJoinSession(code);
+    if(sessionData){
+      toast(`Session rejointe : ${code} — Pièce : ${sessionData.title||'?'}`);
+      // Si on n'a pas la pièce, proposer de la télécharger
+      const hasPlay = S.plays.find(p=>p.id===sessionData.playId);
+      if(!hasPlay && sessionData.playId){
+        setTimeout(()=>{
+          if(confirm(`Télécharger la pièce "${sessionData.title}" depuis le cloud ?`)){
+            fbDownloadPlay(sessionData.playId).then(async play=>{
+              if(play){
+                play.importedAt=Date.now();
+                await DB.put('plays',play);
+                S.plays.unshift(play);
+                renderLibrary();
+                toast('✓ Pièce téléchargée !');
+              }
+            }).catch(e=>toast('Erreur téléchargement: '+e.message));
+          }
+        },500);
+      }
+    } else {
+      toast('Session rejointe : '+code+' (code non trouvé dans le cloud)');
+    }
+  } else {
+    toast('Session rejointe : '+code+' (mode hors ligne)');
+  }
+  renderPartage();
+}
+
+// renderPartage — avec indicateur Firebase et membres
+function renderPartage(){
+  const p=S.play;
+  if(!p){$('partage-body').innerHTML='<div style="padding:2rem;text-align:center;color:var(--ink-3)">Ouvre une pièce d\'abord</div>';return;}
+  const dlg=p.lines.filter(l=>l.type==='dialogue').length;
+  const prog=Math.round((S.lineIdx/Math.max(S.dialogues.length,1))*100);
+  const code=localStorage.getItem('it.session_code')||'';
+  const fbOk=!!FB;
+  $('partage-body').innerHTML=`
+    <div>
+      <div class="section-label">Connexion <span id="fb-status-dot" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${fbOk?'var(--green)':'var(--ink-4)'};margin-left:.3rem;flex-shrink:0"></span></div>
+      <div style="font-family:'Courier Prime',monospace;font-size:.72rem;color:var(--ink-3)">
+        ${fbOk?'☁ Firebase connecté — synchronisation active':'📱 Mode local — données sur cet appareil uniquement'}
+      </div>
+    </div>
+    <div>
+      <div class="section-label">Pièce en cours</div>
+      <div style="background:var(--paper-d);padding:.7rem .9rem;border-radius:2px">
+        <div style="font-family:'IM Fell English',serif;font-size:1.05rem;margin-bottom:.25rem">${esc(p.title)}</div>
+        <div style="font-family:'Courier Prime',monospace;font-size:.68rem;color:var(--ink-3)">
+          ${dlg} répliques · ${p.roles.length} personnages · ${prog}% parcouru
+        </div>
+        <div style="margin-top:.5rem;display:flex;gap:.45rem;flex-wrap:wrap">
+          <button class="btn" style="font-size:.68rem;padding:.25rem .55rem" onclick="fbUploadPlay(S.play)">☁ Envoyer dans le cloud</button>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="section-label">Code de session</div>
+      <div style="font-size:.8rem;color:var(--ink-3);margin-bottom:.5rem">
+        Partage ce code avec ta troupe — ils pourront télécharger la pièce automatiquement.
+      </div>
+      ${code
+        ?`<div class="session-code" onclick="copySessionCode('${code}')" title="Tap pour copier">${code}</div>
+          <div style="font-size:.72rem;color:var(--ink-4);text-align:center;font-family:'Courier Prime',monospace">
+            Tap pour copier · <span style="cursor:pointer;color:var(--red)" onclick="generateSessionCode()">Nouveau code</span>
+          </div>
+          <div style="font-family:'Courier Prime',monospace;font-size:.7rem;color:var(--ink-3);text-align:center;margin-top:.35rem">
+            Membres : <span id="session-members-count">—</span>
+          </div>`
+        :`<button class="btn primary" style="width:100%" onclick="generateSessionCode()">🎲 Générer un code de session</button>`
+      }
+    </div>
+    <div>
+      <div class="section-label">Rejoindre une session</div>
+      <div style="display:flex;gap:.45rem">
+        <input type="text" id="join-code-input" class="txt-input" placeholder="Ex: THÉÂTRE123" style="flex:1;text-transform:uppercase;font-family:'Courier Prime',monospace;font-size:.9rem">
+        <button class="btn primary" onclick="joinSession()">Rejoindre</button>
+      </div>
+    </div>
+  `;
+  // Mettre à jour le statut Firebase
+  updateFBStatus(fbOk);
+}
+
+// ════ PWA + INIT ════
+if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
+
+// Gestion bouton retour Android via popstate
+history.replaceState({screen:'library'},'','');
+window.addEventListener('popstate',()=>{
+  const cur=document.querySelector('.screen.active');
+  if(!cur)return;
+  const id=cur.id.replace('screen-','');
+  if(id==='play'){
+    if($('play-sidebar').classList.contains('open')){closeSidebar();history.pushState({},'','');return;}
+    if($('stats-modal').classList.contains('show')){closeStats();history.pushState({},'','');return;}
+    stopAll();
+    document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+    $('screen-library').classList.add('active');renderLibrary();
+  } else if(id==='editor'){
+    document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+    $('screen-play').classList.add('active');
+  } else if(id==='import'){
+    document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+    $('screen-library').classList.add('active');renderLibrary();
+  }
+});
+
+(async()=>{
+  initDarkMode();  // avant tout affichage
+  initKidMode();   // avant tout affichage
+  await DB.init();loadSettings();await loadLib();renderLibrary();TTS.load();
+  initWelcome();   // après chargement de la lib
+  // Firebase init différé — attendre que les SDK soient chargés (defer)
+  window.addEventListener('load',()=>{
+    if(!window._fbLoadErr && typeof firebase !== 'undefined'){
+      fbInit();
+    } else {
+      console.log('[Firebase] SDK non disponible — mode local');
+      updateFBStatus(false);
+    }
+  });
+})();
+</script>
+</body>
+</html>
