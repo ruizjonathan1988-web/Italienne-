@@ -1367,6 +1367,29 @@ const S={
 function saveSettings(){
   try{localStorage.setItem('it.settings',JSON.stringify({mode:S.mode,myLineBehavior:S.myLineBehavior,voiceAssignments:S.voiceAssignments,voiceProfiles:S.voiceProfiles,blancLevel:S.blancLevel,autoChain:S.autoChain}));}catch{}
 }
+// Assignations de voix par défaut (Les Tréteaux du Babouin — voix.json)
+const DEFAULT_VOICE_ASSIGNMENTS = {
+  "ROSALIE":"fr-FR-DeniseNeural",
+  "MÈRE":"fr-FR-BrigitteNeural",
+  "ANTOINE":"fr-FR-HenriNeural",
+  "MATHILDE":"fr-FR-EloiseNeural",
+  "AMELIE":"fr-FR-CelesteNeural",
+  "AMÉLIE":"fr-FR-VivienneMultilingualNeural",
+  "CLARA":"fr-FR-CoralieNeural",
+  "SANDRA":"fr-FR-HenriNeural",
+  "CHLOÉE":"fr-FR-JacquelineNeural",
+  "ALEX":"fr-FR-JosephineNeural",
+  "AXEL":"fr-FR-JeromeNeural",
+  "CHARLOTTE":"fr-FR-YvetteNeural",
+  "PÈRE":"fr-FR-RemyMultilingualNeural",
+  "JADE":"fr-FR-JacquelineNeural",
+  "MAXIME":"fr-CA-AntoineNeural",
+  "VOIX DU PERE":"fr-FR-RemyMultilingualNeural",
+  "TOUS LES ENFANTS":"fr-FR-DeniseNeural",
+  "TOUT LE MONDE":"fr-FR-CelesteNeural",
+  "LES ENFANTS":"fr-FR-EloiseNeural"
+};
+
 function loadSettings(){
   try{
     const d=JSON.parse(localStorage.getItem('it.settings')||'{}');
@@ -1376,6 +1399,13 @@ function loadSettings(){
     if(typeof d.blancLevel==='number')S.blancLevel=d.blancLevel;
     if(typeof d.autoChain==='boolean')S.autoChain=d.autoChain;
     if(d.voiceProfiles&&typeof d.voiceProfiles==='object')S.voiceProfiles=d.voiceProfiles;
+    // Restaurer les assignations de voix (fix : était sauvegardé mais jamais rechargé)
+    if(d.voiceAssignments&&typeof d.voiceAssignments==='object'&&Object.keys(d.voiceAssignments).length>0){
+      S.voiceAssignments=d.voiceAssignments;
+    } else {
+      // Première visite : appliquer les voix par défaut de la pièce
+      S.voiceAssignments={...DEFAULT_VOICE_ASSIGNMENTS};
+    }
   }catch{}
 }
 
