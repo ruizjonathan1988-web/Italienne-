@@ -1173,11 +1173,16 @@ function _azGetSynth(voiceId, k, region, rate){
 function _azClearPool(){ _azSynthPool.forEach(v=>{try{v.synth.close();}catch{}});_azSynthPool.clear(); }
 
 async function _azFetch(text, voiceId){
-  const k=getAZKey(); if(!k) throw new Error('Pas de clé Azure');
+  const k=getAZKey();
   const region=getAZRegion();
   const cacheKey='az||'+voiceId+'||'+text;
+
+  // Toujours vérifier le cache d'abord (GitHub Pages, IndexedDB, mémoire)
   const cached=await audioCacheGet(cacheKey);
   if(cached) return cached;
+
+  // Pas de clé → pas d'appel Azure possible
+  if(!k) throw new Error('MP3 absent du cache et pas de clé Azure');
 
   // Utiliser le SDK Azure Speech (évite les problèmes CORS de l'API REST)
   return new Promise((resolve, reject)=>{
@@ -1186,7 +1191,6 @@ async function _azFetch(text, voiceId){
       if(!SpeechSDK){ reject(new Error('SDK Azure non chargé — recharge la page')); return; }
 
       const rate = parseFloat($('tts-speed')?.value||1);
-      // Réutilise le synthétiseur existant pour cette voix (pas de nouveau handshake WebSocket)
       const synthesizer = _azGetSynth(voiceId, k, region, rate);
 
       const ssml = `<speak version='1.0' xmlns='http://www.w3.org/2001/10/synthesis' xml:lang='fr-FR'>
@@ -1197,13 +1201,11 @@ async function _azFetch(text, voiceId){
 
       synthesizer.speakSsmlAsync(ssml,
         result=>{
-          // NE PAS fermer le synthétiseur — on le réutilise
           if(result.reason===SpeechSDK.ResultReason.SynthesizingAudioCompleted){
             const blob=new Blob([result.audioData],{type:'audio/mp3'});
             audioCachePut(cacheKey,blob,true);
             resolve(blob);
           } else {
-            // En cas d'erreur, on détruit ce synthétiseur pour en créer un neuf au prochain appel
             _azSynthPool.delete(voiceId);
             reject(new Error('Azure: '+result.errorDetails));
           }
@@ -1374,20 +1376,10 @@ const TTS={
     this.stop();
     const lim=opts.limit&&opts.limit>0?limitText(text,opts.limit):text;
     const isAzVoice=_azVoices.some(v=>v.id===voiceId);
-
-    // 0. Cache GitHub Pages en PRIORITÉ — même sans clé Azure
-    //    Les 605 MP3 préchauffés sont servis directement, zéro appel Azure
-    if(isAzVoice){
-      try{
-        const cacheKey='az||'+voiceId+'||'+lim;
-        const cached=await audioCacheGet(cacheKey);
-        if(cached){this._curAudio=playAudioBlob(cached,opts.onend);return;}
-      }catch(e){console.warn('[Cache] Non trouvé, fallback:',e?.message);}
-    }
-
-    // 1. Azure Speech (seulement si clé configurée ET MP3 absent du cache)
     const azKey=getAZKey();
-    if(azKey&&isAzVoice){
+
+    // Azure voices : cache GitHub Pages en priorité, Azure en fallback si clé dispo
+    if(isAzVoice){
       try{const blob=await _azFetch(lim,voiceId);this._curAudio=playAudioBlob(blob,opts.onend);return;}
       catch(e){console.warn('Azure TTS fallback:',e.message);}
     }
@@ -4217,8 +4209,8 @@ async function autoWarmCache(){
   await DB.init();loadSettings();await loadLib();
   await autoImportPlay(); // pièce embarquée auto
   renderLibrary();TTS.load();
-  // Préchauffage silencieux du cache MP3
-  setTimeout(()=>autoWarmCache(), 2000);
+  // Préchauffage désactivé au démarrage (sature le réseau)
+  // setTimeout(()=>autoWarmCache(), 2000);
   initWelcome();   // après chargement de la lib
   // Firebase init différé — attendre que les SDK soient chargés (defer)
   window.addEventListener('load',()=>{
