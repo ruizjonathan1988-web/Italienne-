@@ -255,6 +255,57 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:13px;heigh
 .vp-btn{transition:all .15s;font-family:'Crimson Pro',serif!important;white-space:nowrap}
 .vp-btn:active{transform:scale(.95)}
 .vp-active{box-shadow:0 1px 4px rgba(0,0,0,.2)}
+/* ══ JEU : MÉTHODE DES LETTRES ══ */
+.jeu-screen{flex:1;display:flex;flex-direction:column;overflow:hidden;background:var(--paper)}
+/* Barre de progression du haut */
+.jeu-prog{height:4px;background:var(--line-l);flex-shrink:0}
+.jeu-prog-fill{height:100%;background:var(--red);transition:width .5s;border-radius:0 2px 2px 0}
+/* Souffleur — réplique précédente */
+.jeu-souffleur{padding:.6rem 1rem .5rem;border-bottom:1px solid var(--line-l);background:var(--paper-d);flex-shrink:0;min-height:52px;display:flex;align-items:center;gap:.5rem}
+.jeu-souffleur-role{font-family:'Courier Prime',monospace;font-size:.6rem;text-transform:uppercase;letter-spacing:.1em;color:var(--ink-4);white-space:nowrap;flex-shrink:0}
+.jeu-souffleur-text{font-family:'IM Fell English',serif;font-style:italic;font-size:.88rem;color:var(--ink-3);line-height:1.5;flex:1}
+/* Zone de jeu centrale */
+.jeu-arena{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:1.2rem 1rem 0;gap:1rem;overflow:hidden}
+/* HUD : vies + score + combo */
+.jeu-hud{display:flex;align-items:center;justify-content:space-between;width:100%;max-width:480px}
+.jeu-hearts{font-size:1.35rem;letter-spacing:.12rem;flex-shrink:0;min-width:80px}
+.jeu-score-wrap{font-family:'Courier Prime',monospace;font-size:.72rem;color:var(--ink-3);text-align:center}
+.jeu-score-num{font-size:1.1rem;font-weight:700;color:var(--ink);display:block;line-height:1}
+.jeu-combo{font-family:'Courier Prime',monospace;font-size:.78rem;font-weight:700;color:var(--amber);min-width:55px;text-align:right;transition:transform .15s}
+.jeu-combo.pop{transform:scale(1.5)}
+/* Affichage du rôle */
+.jeu-role-lbl{font-family:'Courier Prime',monospace;font-size:.62rem;text-transform:uppercase;letter-spacing:.14em;color:var(--red);align-self:flex-start;padding-left:.1rem}
+/* Ligne de mots */
+.jeu-line{display:flex;flex-wrap:wrap;gap:.35rem .22rem;align-items:center;justify-content:center;max-width:500px;width:100%}
+/* Mot révélé */
+.jw-done{font-family:'IM Fell English',serif;font-size:1.25rem;color:var(--ink-2);padding:.05rem .1rem;transition:color .3s}
+.jw-done.ok{color:var(--green);font-weight:600}
+.jw-done.fail{color:var(--red)}
+/* Mot actif — à deviner */
+.jw-active{font-family:'Courier Prime',monospace;font-size:1.1rem;background:var(--ink);color:var(--paper);padding:.2rem .5rem;border-radius:3px;letter-spacing:.06em;animation:jpulse 1.2s ease-in-out infinite;box-shadow:0 2px 8px var(--shadow)}
+@keyframes jpulse{0%,100%{box-shadow:0 2px 8px var(--shadow)}50%{box-shadow:0 2px 16px rgba(138,24,24,.35)}}
+.jw-active.shake{animation:jshake .35s ease}
+@keyframes jshake{0%{transform:translateX(0)}20%{transform:translateX(-6px)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(4px)}100%{transform:translateX(0)}}
+/* Mot encore à venir */
+.jw-todo{font-family:'Courier Prime',monospace;font-size:1rem;color:var(--ink-4);letter-spacing:.04em;padding:.05rem .1rem}
+/* Ponctuation */
+.jw-punct{font-family:'IM Fell English',serif;font-size:1.2rem;color:var(--ink-3);margin-left:-.15rem}
+/* Zone de saisie */
+.jeu-input-zone{display:flex;flex-direction:column;align-items:center;gap:.4rem;width:100%;max-width:400px;padding-bottom:.5rem}
+.jeu-key-hint{font-family:'Courier Prime',monospace;font-size:.72rem;color:var(--ink-4);text-align:center}
+.jeu-key-letter{font-size:1.6rem;font-weight:700;color:var(--red);font-family:'IM Fell English',serif;min-height:2rem;line-height:1}
+.jeu-skip-btn{font-family:'Courier Prime',monospace;font-size:.62rem;color:var(--ink-4);background:none;border:1px solid var(--line);border-radius:2px;padding:.18rem .55rem;cursor:pointer;margin-top:.15rem}
+/* Flash overlay correct/wrong */
+.jeu-flash{position:fixed;inset:0;pointer-events:none;z-index:90;opacity:0;transition:opacity .12s}
+.jeu-flash.green{background:rgba(40,104,56,.18)}
+.jeu-flash.red{background:rgba(138,24,24,.22)}
+.jeu-flash.show{opacity:1}
+/* Fin de jeu */
+.jeu-end{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.9rem;padding:2rem;text-align:center}
+.jeu-end-stars{font-size:2.4rem;letter-spacing:.15rem}
+.jeu-end-score{font-family:'IM Fell English',serif;font-size:3rem;color:var(--red)}
+.jeu-best{font-family:'Courier Prime',monospace;font-size:.7rem;color:var(--amber)}
+
 /* ── QUIZ ── */
 .quiz-wrap{flex:1;display:flex;flex-direction:column;overflow:hidden}
 .quiz-header-bar{
@@ -563,6 +614,8 @@ body.dark-mode .souffleur-hint{background:#2A2420}
           <button class="btn" style="font-size:.68rem;padding:.28rem" id="btn-test-az" onclick="testAZKey()">▶ Tester</button>
         </div>
         <div id="az-status" style="font-family:'Courier Prime',monospace;font-size:.62rem;margin-top:.35rem"></div>
+        <button class="btn" style="font-size:.65rem;padding:.22rem;margin-top:.3rem;width:100%" onclick="testCache()">🔍 Tester le cache GitHub</button>
+        <div id="cache-gh-status" style="font-family:'Courier Prime',monospace;font-size:.6rem;margin-top:.28rem;line-height:1.5"></div>
       </div>
       <!-- Cache audio ElevenLabs -->
       <div class="sb-section">
@@ -592,6 +645,7 @@ body.dark-mode .souffleur-hint{background:#2A2420}
           <button class="btn" onclick="openFilRouge();closeSidebar()">🧵 Mon fil rouge</button>
           <button class="btn" onclick="openEnregistrements();closeSidebar()">🎙️ Enregistrements</button>
           <button class="btn" onclick="openPartage();closeSidebar()">🔗 Partager session</button>
+          <button class="btn" onclick="openLettres();closeSidebar()">🔡 Méthode des lettres</button>
           <button class="btn" onclick="openQuiz();closeSidebar()">🎮 Quiz de mémorisation</button>
           <button class="btn" onclick="exportMonTexte()">🖨️ Exporter mon texte</button>
           <button class="btn" onclick="exportCurrentPlay()">↗ Exporter JSON</button>
@@ -686,6 +740,22 @@ body.dark-mode .souffleur-hint{background:#2A2420}
 </div>
 
 <!-- ══ QUIZ ══ -->
+<div id="screen-lettres" class="screen">
+  <div class="app-header" style="padding:.48rem .75rem">
+    <button class="icon-btn" onclick="jeuQuit()">←</button>
+    <h1 style="font-size:.95rem;flex:1">🔡 Méthode des lettres</h1>
+    <button class="icon-btn" onclick="jeuRestart()" title="Recommencer">↺</button>
+  </div>
+  <!-- Flash overlay -->
+  <div class="jeu-flash" id="jeu-flash"></div>
+  <!-- Input caché pour capturer le clavier mobile -->
+  <input id="jeu-input" type="text" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
+    style="position:absolute;opacity:0;pointer-events:none;width:1px;height:1px;top:50%;left:50%">
+  <div class="jeu-screen" id="jeu-screen">
+    <!-- Contenu généré dynamiquement par jeuRender() -->
+  </div>
+</div>
+
 <div id="screen-quiz" class="screen">
   <div class="app-header">
     <button class="icon-btn" id="btn-quiz-back">←</button>
@@ -998,6 +1068,7 @@ function saveAZKey(){
   localStorage.setItem('it.az_region', region);
   $('az-key').value = '';
   _audioCache.clear();
+  _azClearPool(); // reset des connexions WebSocket
   toast('✓ Clé Azure sauvegardée');
   updateAZStatus();
   if(S.play) TTS.autoAssign(S.play.roles);
@@ -1011,6 +1082,31 @@ function resetVoiceAssign(){
   TTS.autoAssign(S.play.roles);
   toast('✓ Voix réassignées avec les sources disponibles');
 }
+// Diagnostic : teste si la première réplique du rôle est dans le cache GitHub
+async function testCache(){
+  const el=$('cache-gh-status');
+  if(!el)return;
+  if(!S.play||!S.myRole){el.textContent='Ouvre une pièce et choisis ton rôle d\'abord.';el.style.color='var(--ink-4)';return;}
+  const line=S.dialogues.find(d=>isMyLine(d.role));
+  if(!line){el.textContent='Aucune réplique trouvée pour ce rôle.';return;}
+  const voice=S.voiceAssignments[S.myRole]||'';
+  if(!voice){el.textContent='Assigne une voix Azure à ton rôle.';return;}
+  el.textContent='Test en cours…';el.style.color='var(--ink-4)';
+  const cacheKey='az||'+voice+'||'+line.text;
+  const hash=await _md5(cacheKey);
+  const url=`https://ruizjonathan1988-web.github.io/Italienne-/tts_cache/${hash}.mp3`;
+  try{
+    const r=await fetch(url,{method:'HEAD'});
+    if(r.ok){
+      el.innerHTML=`<span style="color:var(--green)">✓ Cache OK</span><br>Voix: ${voice}<br>Hash: ${hash.slice(0,12)}…`;
+    } else {
+      el.innerHTML=`<span style="color:var(--red)">✗ 404 — Hash introuvable</span><br>Voix: ${voice}<br>Hash: ${hash.slice(0,12)}…<br>Texte: "${line.text.slice(0,30)}…"`;
+    }
+  }catch(e){
+    el.innerHTML=`<span style="color:var(--red)">Erreur réseau</span>`;
+  }
+}
+
 function updateAZStatus(){
   const el=$('az-status'); if(!el) return;
   const k=getAZKey();
@@ -1039,6 +1135,28 @@ async function testAZKey(){
   }
 }
 
+// Pool de synthétiseurs Azure réutilisables par voix (évite le handshake WebSocket à chaque appel)
+const _azSynthPool = new Map(); // voiceId → {synth, key, region, rate}
+let _azSynthPending = false;
+
+function _azGetSynth(voiceId, k, region, rate){
+  const poolKey = `${voiceId}|${k}|${region}|${rate}`;
+  const cached = _azSynthPool.get(voiceId);
+  if(cached && cached.poolKey === poolKey) return cached.synth;
+  // Ferme l'ancien si voix/config changée
+  if(cached){ try{ cached.synth.close(); }catch{} }
+  const SpeechSDK = window.SpeechSDK;
+  const config = SpeechSDK.SpeechConfig.fromSubscription(k, region);
+  config.speechSynthesisVoiceName = voiceId;
+  config.speechSynthesisOutputFormat = SpeechSDK.SpeechSynthesisOutputFormat.Audio24Khz48KBitRateMonoMp3;
+  const synth = new SpeechSDK.SpeechSynthesizer(config, null);
+  _azSynthPool.set(voiceId, {synth, poolKey});
+  return synth;
+}
+
+// Vider le pool quand la clé change
+function _azClearPool(){ _azSynthPool.forEach(v=>{try{v.synth.close();}catch{}});_azSynthPool.clear(); }
+
 async function _azFetch(text, voiceId){
   const k=getAZKey(); if(!k) throw new Error('Pas de clé Azure');
   const region=getAZRegion();
@@ -1053,12 +1171,9 @@ async function _azFetch(text, voiceId){
       if(!SpeechSDK){ reject(new Error('SDK Azure non chargé — recharge la page')); return; }
 
       const rate = parseFloat($('tts-speed')?.value||1);
-      const config = SpeechSDK.SpeechConfig.fromSubscription(k, region);
-      config.speechSynthesisVoiceName = voiceId;
-      config.speechSynthesisOutputFormat =
-        SpeechSDK.SpeechSynthesisOutputFormat.Audio24Khz48KBitRateMonoMp3;
+      // Réutilise le synthétiseur existant pour cette voix (pas de nouveau handshake WebSocket)
+      const synthesizer = _azGetSynth(voiceId, k, region, rate);
 
-      const synthesizer = new SpeechSDK.SpeechSynthesizer(config, null);
       const ssml = `<speak version='1.0' xmlns='http://www.w3.org/2001/10/synthesis' xml:lang='fr-FR'>
         <voice name='${voiceId}'>
           <prosody rate='${Math.round((rate-1)*100)}%'>${text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</prosody>
@@ -1067,16 +1182,21 @@ async function _azFetch(text, voiceId){
 
       synthesizer.speakSsmlAsync(ssml,
         result=>{
-          synthesizer.close();
+          // NE PAS fermer le synthétiseur — on le réutilise
           if(result.reason===SpeechSDK.ResultReason.SynthesizingAudioCompleted){
             const blob=new Blob([result.audioData],{type:'audio/mp3'});
             audioCachePut(cacheKey,blob,true);
             resolve(blob);
           } else {
+            // En cas d'erreur, on détruit ce synthétiseur pour en créer un neuf au prochain appel
+            _azSynthPool.delete(voiceId);
             reject(new Error('Azure: '+result.errorDetails));
           }
         },
-        err=>{ synthesizer.close(); reject(new Error('Azure SDK: '+err)); }
+        err=>{
+          _azSynthPool.delete(voiceId);
+          reject(new Error('Azure SDK: '+err));
+        }
       );
     }catch(e){ reject(e); }
   });
@@ -1238,9 +1358,20 @@ const TTS={
     if(!text){opts.onend?.();return;}
     this.stop();
     const lim=opts.limit&&opts.limit>0?limitText(text,opts.limit):text;
-    // 1. Azure Speech (priorité si clé configurée et voix Azure)
-    const azKey=getAZKey();
     const isAzVoice=_azVoices.some(v=>v.id===voiceId);
+
+    // 0. Cache GitHub Pages en PRIORITÉ — même sans clé Azure
+    //    Les 605 MP3 préchauffés sont servis directement, zéro appel Azure
+    if(isAzVoice){
+      try{
+        const cacheKey='az||'+voiceId+'||'+lim;
+        const cached=await audioCacheGet(cacheKey);
+        if(cached){this._curAudio=playAudioBlob(cached,opts.onend);return;}
+      }catch(e){console.warn('[Cache] Non trouvé, fallback:',e?.message);}
+    }
+
+    // 1. Azure Speech (seulement si clé configurée ET MP3 absent du cache)
+    const azKey=getAZKey();
     if(azKey&&isAzVoice){
       try{const blob=await _azFetch(lim,voiceId);this._curAudio=playAudioBlob(blob,opts.onend);return;}
       catch(e){console.warn('Azure TTS fallback:',e.message);}
@@ -1367,6 +1498,29 @@ const S={
 function saveSettings(){
   try{localStorage.setItem('it.settings',JSON.stringify({mode:S.mode,myLineBehavior:S.myLineBehavior,voiceAssignments:S.voiceAssignments,voiceProfiles:S.voiceProfiles,blancLevel:S.blancLevel,autoChain:S.autoChain}));}catch{}
 }
+// Assignations de voix par défaut (Les Tréteaux du Babouin — voix.json)
+const DEFAULT_VOICE_ASSIGNMENTS = {
+  "ROSALIE":"fr-FR-DeniseNeural",
+  "MÈRE":"fr-FR-BrigitteNeural",
+  "ANTOINE":"fr-FR-HenriNeural",
+  "MATHILDE":"fr-FR-EloiseNeural",
+  "AMELIE":"fr-FR-CelesteNeural",
+  "AMÉLIE":"fr-FR-VivienneMultilingualNeural",
+  "CLARA":"fr-FR-CoralieNeural",
+  "SANDRA":"fr-FR-HenriNeural",
+  "CHLOÉE":"fr-FR-JacquelineNeural",
+  "ALEX":"fr-FR-JosephineNeural",
+  "AXEL":"fr-FR-JeromeNeural",
+  "CHARLOTTE":"fr-FR-YvetteNeural",
+  "PÈRE":"fr-FR-RemyMultilingualNeural",
+  "JADE":"fr-FR-JacquelineNeural",
+  "MAXIME":"fr-CA-AntoineNeural",
+  "VOIX DU PERE":"fr-FR-RemyMultilingualNeural",
+  "TOUS LES ENFANTS":"fr-FR-DeniseNeural",
+  "TOUT LE MONDE":"fr-FR-CelesteNeural",
+  "LES ENFANTS":"fr-FR-EloiseNeural"
+};
+
 function loadSettings(){
   try{
     const d=JSON.parse(localStorage.getItem('it.settings')||'{}');
@@ -1376,6 +1530,13 @@ function loadSettings(){
     if(typeof d.blancLevel==='number')S.blancLevel=d.blancLevel;
     if(typeof d.autoChain==='boolean')S.autoChain=d.autoChain;
     if(d.voiceProfiles&&typeof d.voiceProfiles==='object')S.voiceProfiles=d.voiceProfiles;
+    // Restaurer les assignations de voix (fix : était sauvegardé mais jamais rechargé)
+    if(d.voiceAssignments&&typeof d.voiceAssignments==='object'&&Object.keys(d.voiceAssignments).length>0){
+      S.voiceAssignments=d.voiceAssignments;
+    } else {
+      // Première visite : appliquer les voix par défaut de la pièce
+      S.voiceAssignments={...DEFAULT_VOICE_ASSIGNMENTS};
+    }
   }catch{}
 }
 
@@ -2833,6 +2994,284 @@ const QZ = {
   hiddenWords:[],   // indices des mots cachés dans la réplique courante
   revealedSet:new Set(), // mots révélés par tap
 };
+
+// ════ JEU : MÉTHODE DES LETTRES ════
+// Principe : première lettre de chaque mot à taper pour débloquer — 3 vies, combo, score
+const JEU = {
+  lines:[], idx:0, total:0,
+  words:[], wi:0,          // mots de la réplique courante, index du mot actif
+  lives:3, score:0, combo:0, maxCombo:0,
+  linesOk:0, linesFail:0,
+  best: parseInt(localStorage.getItem('it.jeu.best')||'0'),
+  active:false,
+};
+
+// Normalise un caractère pour comparaison (ignore accents, casse)
+function jeuNorm(c){
+  return c.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+}
+
+// Tokenise une réplique en mots + ponctuation
+function jeuTokenize(text){
+  const tokens=[];
+  // Split en gardant la ponctuation séparée
+  const parts=text.match(/[^\wÀ-ÿ'']+|[\wÀ-ÿ'']+(?:['\-][\wÀ-ÿ'']+)*/gu)||[];
+  parts.forEach(p=>{
+    if(/^[^\wÀ-ÿ'']+$/.test(p)) tokens.push({type:'punct',text:p});
+    else tokens.push({type:'word',text:p,first:jeuNorm(p[0]),state:'todo'});
+  });
+  return tokens;
+}
+
+function openLettres(){
+  if(!S.play){toast('Ouvre une pièce d\'abord');return;}
+  if(!S.myRole){toast('Choisis ton rôle d\'abord dans la sidebar');return;}
+  showScreen('lettres');
+  jeuStart();
+}
+
+function startLettres(){ jeuStart(); }
+
+function jeuStart(){
+  const myLines=S.dialogues.filter(d=>isMyLine(d.role));
+  if(!myLines.length){
+    $('jeu-screen').innerHTML=`<div style="flex:1;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:.8rem;color:var(--ink-3);text-align:center;padding:2rem">
+      <div style="font-size:3rem">🎭</div>
+      <div style="font-family:'IM Fell English',serif;font-size:1.1rem">Aucune réplique pour ce rôle</div>
+      <div style="font-size:.85rem">Choisis d'abord ton rôle dans la sidebar</div>
+    </div>`;
+    return;
+  }
+  // Mélange Fisher-Yates
+  const arr=[...myLines];
+  for(let i=arr.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[arr[i],arr[j]]=[arr[j],arr[i]];}
+  JEU.lines=arr; JEU.idx=0; JEU.total=arr.length;
+  JEU.lives=3; JEU.score=0; JEU.combo=0; JEU.maxCombo=0;
+  JEU.linesOk=0; JEU.linesFail=0; JEU.active=true;
+  jeuLoadLine();
+}
+
+function jeuLoadLine(){
+  if(JEU.idx>=JEU.total){jeuEnd();return;}
+  const cur=JEU.lines[JEU.idx];
+  JEU.words=jeuTokenize(cur.text);
+  JEU.wi=JEU.words.findIndex(w=>w.type==='word');
+  jeuRender();
+  // Focus input caché pour clavier mobile
+  setTimeout(()=>{ const inp=$('jeu-input'); if(inp){inp.value='';inp.focus();} },120);
+}
+
+function jeuRender(){
+  if(JEU.idx>=JEU.total){jeuEnd();return;}
+  const cur=JEU.lines[JEU.idx];
+  const prev=S.dialogues.find(d=>d.dIdx===cur.dIdx-1);
+  const pct=Math.round(JEU.idx/JEU.total*100);
+  const hearts='❤️'.repeat(JEU.lives)+'🖤'.repeat(Math.max(0,3-JEU.lives));
+  const comboTxt=JEU.combo>=2?`🔥 x${JEU.combo}`:'';
+
+  // Construire l'affichage des mots
+  const wordsHTML=JEU.words.map((tok,i)=>{
+    if(tok.type==='punct') return`<span class="jw-punct">${esc(tok.text)}</span>`;
+    const blanks='_'.repeat(Math.max(2,Math.min(tok.text.length,7)));
+    if(tok.state==='done') return`<span class="jw-done ok">${esc(tok.text)}</span>`;
+    if(tok.state==='fail') return`<span class="jw-done fail">${esc(tok.text)}</span>`;
+    if(i===JEU.wi)         return`<span class="jw-active" id="jw-active">${esc(tok.first.toUpperCase())}${blanks}</span>`;
+    return`<span class="jw-todo">${esc(tok.first.toUpperCase())}${blanks}</span>`;
+  }).join('');
+
+  // Hint : première lettre du mot actif
+  const activeWord=JEU.words[JEU.wi];
+  const hintLetter=activeWord?activeWord.first.toUpperCase():'';
+
+  $('jeu-screen').innerHTML=`
+    <div class="jeu-prog"><div class="jeu-prog-fill" style="width:${pct}%"></div></div>
+    <div class="jeu-souffleur">
+      ${prev
+        ?`<span class="jeu-souffleur-role">${esc(prev.role)}</span>
+          <span class="jeu-souffleur-text">…${esc(prev.text.split(/\s+/).slice(-10).join(' '))}</span>`
+        :`<span class="jeu-souffleur-text" style="color:var(--amber);font-style:normal">▸ Début de scène</span>`}
+    </div>
+    <div class="jeu-arena">
+      <div class="jeu-hud">
+        <div class="jeu-hearts">${hearts}</div>
+        <div class="jeu-score-wrap">
+          <span class="jeu-score-num">${JEU.score}</span>
+          <span>points</span>
+        </div>
+        <div class="jeu-combo" id="jeu-combo">${comboTxt}</div>
+      </div>
+      <div class="jeu-role-lbl">${esc(S.myRole)}</div>
+      <div class="jeu-line">${wordsHTML}</div>
+      <div class="jeu-input-zone">
+        <div class="jeu-key-letter" id="jeu-key-letter">${hintLetter}</div>
+        <div class="jeu-key-hint">Tape la 1ʳᵉ lettre du mot en rouge</div>
+        <button class="jeu-skip-btn" onclick="jeuSkipWord()">Passer ce mot (−1 ❤️)</button>
+      </div>
+    </div>
+    <div style="text-align:center;font-family:'Courier Prime',monospace;font-size:.62rem;color:var(--ink-4);padding:.4rem;flex-shrink:0">
+      Réplique ${JEU.idx+1}/${JEU.total} · Meilleur : ${JEU.best} pts
+    </div>`;
+
+  // Rebind input caché
+  const inp=$('jeu-input');
+  if(inp){
+    inp.oninput=jeuHandleInput;
+    inp.onkeydown=e=>{if(e.key==='Enter')jeuSkipLine();};
+    inp.value='';
+  }
+}
+
+function jeuHandleInput(e){
+  if(!JEU.active)return;
+  const inp=e.target;
+  const typed=(inp.value||'').trim();
+  if(!typed){return;}
+  inp.value=''; // reset immédiatement
+  const letter=jeuNorm(typed[typed.length-1]);
+  jeuTryLetter(letter);
+}
+
+// Aussi écouter keydown sur le document pour desktop
+function jeuHandleKey(e){
+  if(!JEU.active)return;
+  const scr=document.querySelector('#screen-lettres.active');
+  if(!scr)return;
+  // Ignorer les touches spéciales
+  if(e.key.length!==1||e.ctrlKey||e.metaKey||e.altKey)return;
+  const inp=$('jeu-input');
+  if(document.activeElement!==inp) inp?.focus();
+  jeuTryLetter(jeuNorm(e.key));
+  e.preventDefault();
+}
+document.addEventListener('keydown', jeuHandleKey);
+
+function jeuTryLetter(letter){
+  const word=JEU.words[JEU.wi];
+  if(!word||word.type!=='word')return;
+
+  if(letter===word.first){
+    // ✅ Correct
+    word.state='done';
+    const pts=10*(1+Math.floor(JEU.combo/3));
+    JEU.score+=pts;
+    JEU.combo++;
+    JEU.maxCombo=Math.max(JEU.maxCombo,JEU.combo);
+    jeuFlash('green');
+    jeuNextWord();
+  } else {
+    // ❌ Mauvaise lettre
+    JEU.combo=0;
+    JEU.lives--;
+    jeuFlash('red');
+    // Shake le mot actif
+    const el=$('jw-active');
+    if(el){el.classList.add('shake');setTimeout(()=>el.classList.remove('shake'),400);}
+    if(JEU.lives<=0){
+      jeuRevealAll('fail');
+      JEU.linesFail++;
+      JEU.lives=3; // reset vies pour prochaine réplique
+      setTimeout(()=>{JEU.idx++;jeuLoadLine();},1200);
+      return;
+    }
+    jeuRender(); // refresh hearts
+  }
+}
+
+function jeuNextWord(){
+  // Cherche le prochain mot non traité
+  let next=JEU.wi+1;
+  while(next<JEU.words.length && JEU.words[next].type!=='word') next++;
+  if(next>=JEU.words.length){
+    // Réplique terminée avec succès
+    JEU.linesOk++;
+    jeuRevealAll('done');
+    const bonusPts=JEU.combo>=5?50:JEU.combo>=3?25:0;
+    if(bonusPts) JEU.score+=bonusPts;
+    setTimeout(()=>{JEU.idx++;jeuLoadLine();},900);
+  } else {
+    JEU.wi=next;
+    jeuRender();
+    // Mise à jour combo badge
+    const cb=$('jeu-combo');
+    if(cb&&JEU.combo>=2){cb.textContent=`🔥 x${JEU.combo}`;cb.classList.add('pop');setTimeout(()=>cb.classList.remove('pop'),200);}
+  }
+}
+
+function jeuRevealAll(state){
+  JEU.words.forEach(w=>{if(w.type==='word'&&w.state==='todo')w.state=state;});
+  jeuRender();
+}
+
+function jeuSkipWord(){
+  const word=JEU.words[JEU.wi];
+  if(!word)return;
+  JEU.lives=Math.max(0,JEU.lives-1);
+  JEU.combo=0;
+  word.state='fail';
+  if(JEU.lives<=0){
+    jeuRevealAll('fail');
+    JEU.linesFail++;
+    JEU.lives=3;
+    setTimeout(()=>{JEU.idx++;jeuLoadLine();},1000);
+  } else {
+    jeuNextWord();
+  }
+}
+
+function jeuSkipLine(){
+  JEU.linesFail++;
+  JEU.combo=0;
+  JEU.idx++;
+  jeuLoadLine();
+}
+
+function jeuFlash(type){
+  const f=$('jeu-flash');if(!f)return;
+  f.className=`jeu-flash ${type} show`;
+  setTimeout(()=>f.classList.remove('show'),180);
+}
+
+function jeuEnd(){
+  JEU.active=false;
+  const pct=JEU.total>0?Math.round(JEU.linesOk/JEU.total*100):0;
+  const stars=pct>=90?'🌟🌟🌟':pct>=70?'⭐⭐⭐':pct>=50?'⭐⭐':'⭐';
+  const msg=pct>=90?'Texte maîtrisé — tu es prêt pour la scène !'
+    :pct>=70?'Très bien ! Encore un passage pour consolider.'
+    :pct>=50?'Bon début — continue à t\'entraîner.'
+    :'Relis le script et réessaie.';
+  const isNew=JEU.score>JEU.best;
+  if(isNew){JEU.best=JEU.score;localStorage.setItem('it.jeu.best',JEU.score);}
+  $('jeu-screen').innerHTML=`
+    <div class="jeu-end">
+      <div class="jeu-end-stars">${stars}</div>
+      <div class="jeu-end-score">${JEU.score}</div>
+      <div style="font-family:'Courier Prime',monospace;font-size:.72rem;color:var(--ink-3)">points</div>
+      ${isNew?`<div class="jeu-best">🏆 Nouveau record !</div>`:''}
+      <div style="font-family:'IM Fell English',serif;font-size:1rem;color:var(--ink-2);max-width:280px;line-height:1.6">${msg}</div>
+      <div style="font-family:'Courier Prime',monospace;font-size:.7rem;color:var(--ink-3);display:flex;gap:1.2rem">
+        <span>✓ ${JEU.linesOk} répliques</span>
+        <span>✗ ${JEU.linesFail} ratées</span>
+        <span>🔥 x${JEU.maxCombo} max</span>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:.45rem;width:100%;max-width:280px;margin-top:.5rem">
+        <button class="btn primary" onclick="jeuStart()" style="font-size:.85rem">↺ Rejouer</button>
+        <button class="btn" onclick="showScreen('play')" style="font-size:.85rem">← Retour au script</button>
+      </div>
+    </div>`;
+}
+
+function jeuRestart(){ jeuStart(); }
+function jeuQuit(){ JEU.active=false; showScreen(S.play?'play':'library'); }
+
+// ════ ANCIEN CODE LETTRES (remplacé) ════
+// Les fonctions ci-dessous sont des stubs pour compatibilité
+function renderLettres(){}
+function revealLettresWord(){}
+function revealAllLettres(){}
+function setLettresLevel(){}
+function nextLettres(){}
+function ltHear(){}
+function renderLettresEnd(){}
 
 function openQuiz(){
   if(!S.play||!S.myRole){toast('Choisis un rôle d\'abord');return;}
