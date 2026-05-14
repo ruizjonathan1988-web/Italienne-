@@ -424,7 +424,8 @@ body.dark-mode .souffleur-hint{background:#2A2420}
 .toast{position:fixed;bottom:66px;left:50%;transform:translateX(-50%) translateY(12px);background:var(--ink);color:var(--paper);padding:.38rem .95rem;border-radius:1px;font-family:'Courier Prime',monospace;font-size:.71rem;opacity:0;transition:all .24s;z-index:190;white-space:nowrap;pointer-events:none}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 </style>
-<!-- Firebase SDK — async/defer pour ne pas bloquer si réseau indisponible -->
+<!-- Azure Speech SDK -->
+<script defer src="https://aka.ms/csspeech/jsbrowserpackageraw"></script>
 <script defer onerror="window._fbLoadErr=true" src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
 <script defer onerror="window._fbLoadErr=true" src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
 <script defer onerror="window._fbLoadErr=true" src="https://www.gstatic.com/firebasejs/9.22.1/firebase-storage-compat.js"></script>
@@ -536,7 +537,33 @@ body.dark-mode .souffleur-hint{background:#2A2420}
         </div>
       </div>
 
-      <div class="sb-section"><div class="sb-label">Voix par personnage</div><div id="voice-assign-list"></div></div>
+      <div class="sb-section"><div class="sb-label">Voix par personnage <button onclick="resetVoiceAssign()" style="float:right;background:none;border:1px solid var(--line);border-radius:2px;cursor:pointer;font-family:'Courier Prime',monospace;font-size:.6rem;padding:.12rem .35rem;color:var(--ink-3)">↺ Réassigner</button></div><div id="voice-assign-list"></div></div>
+      <!-- Clé ElevenLabs -->
+      <div class="sb-section">
+        <div class="sb-label">ElevenLabs <span id="el-badge" style="font-size:.6rem;color:var(--ink-4);text-transform:none;letter-spacing:0"></span></div>
+        <input type="password" id="el-key" class="txt-input" placeholder="Colle ta clé sk_…" style="font-size:.72rem;padding:.3rem .5rem;margin-bottom:.4rem">
+        <div style="display:flex;gap:.35rem">
+          <button class="btn primary" style="flex:1;font-size:.68rem;padding:.28rem" onclick="saveELKey()">✓ Sauvegarder</button>
+          <button class="btn" style="font-size:.68rem;padding:.28rem" id="btn-test-el" onclick="testELKey()">▶ Tester</button>
+        </div>
+        <div id="el-status" style="font-family:'Courier Prime',monospace;font-size:.62rem;margin-top:.35rem"></div>
+      </div>
+      <!-- Clé Azure Speech -->
+      <div class="sb-section">
+        <div class="sb-label">Azure Speech <span style="font-size:.6rem;color:var(--green);text-transform:none;letter-spacing:0">100$ crédits</span></div>
+        <input type="password" id="az-key" class="txt-input" placeholder="Clé Azure Speech…" style="font-size:.72rem;padding:.3rem .5rem;margin-bottom:.3rem">
+        <select id="az-region" class="voice-sel" style="margin-bottom:.35rem">
+          <option value="francecentral">France Central (Paris)</option>
+          <option value="westeurope">West Europe (Amsterdam)</option>
+          <option value="northeurope">North Europe (Dublin)</option>
+          <option value="eastus">East US</option>
+        </select>
+        <div style="display:flex;gap:.35rem">
+          <button class="btn primary" style="flex:1;font-size:.68rem;padding:.28rem" onclick="saveAZKey()">✓ Sauvegarder</button>
+          <button class="btn" style="font-size:.68rem;padding:.28rem" id="btn-test-az" onclick="testAZKey()">▶ Tester</button>
+        </div>
+        <div id="az-status" style="font-family:'Courier Prime',monospace;font-size:.62rem;margin-top:.35rem"></div>
+      </div>
       <!-- Cache audio ElevenLabs -->
       <div class="sb-section">
         <div class="sb-label">Cache audio ElevenLabs</div>
@@ -860,20 +887,38 @@ async function audioCacheGet(key){
     });
     if(blob){ _audioCache.set(key,blob); return blob; }
   }
-  // 3. Firebase Storage
+  // 3. GitHub Pages (tts_cache préchauffé)
+  try{
+    const hash=await _md5(key);
+    const ghUrl=`https://ruizjonathan1988-web.github.io/Italienne-/tts_cache/${hash}.mp3`;
+    const r=await fetch(ghUrl);
+    if(r.ok){
+      const blob=await r.blob();
+      await audioCachePut(key,blob,false);
+      return blob;
+    }
+  }catch{}
+  // 4. Firebase Storage (si activé)
   if(FB_ST){
     try{
-      const ref=FB_ST.ref(`tts_cache/${key}.mp3`);
+      const ref=FB_ST.ref(`tts_cache/${await _md5(key)}.mp3`);
       const url=await ref.getDownloadURL();
       const r=await fetch(url);
       if(r.ok){
         const blob=await r.blob();
-        await audioCachePut(key,blob,false); // sauvegarder localement (pas re-upload)
+        await audioCachePut(key,blob,false);
         return blob;
       }
     }catch{}
   }
   return null;
+}
+
+// Générer le nom de fichier cache (SHA-1, même algo que le script Python)
+async function _md5(str){
+  const data=new TextEncoder().encode(str);
+  const buf=await crypto.subtle.digest('SHA-1',data);
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
 }
 
 async function audioCachePut(key, blob, uploadToFB=true){
@@ -910,6 +955,132 @@ async function audioCacheCount(){
 }
 
 function getELKey(){ return localStorage.getItem('it.el_key') || ''; }
+
+// ════ AZURE SPEECH TTS ════
+// 50 voix françaises Neural de haute qualité
+const AZ_VOICES_FR = [
+  // France
+  {id:'fr-FR-DeniseNeural',    name:'Denise',    gender:'F', region:'fr-FR'},
+  {id:'fr-FR-HenriNeural',     name:'Henri',     gender:'M', region:'fr-FR'},
+  {id:'fr-FR-EloiseNeural',    name:'Eloise',    gender:'F', region:'fr-FR'},
+  {id:'fr-FR-BrigitteNeural',  name:'Brigitte',  gender:'F', region:'fr-FR'},
+  {id:'fr-FR-CelesteNeural',   name:'Céleste',   gender:'F', region:'fr-FR'},
+  {id:'fr-FR-ClaudeNeural',    name:'Claude',    gender:'M', region:'fr-FR'},
+  {id:'fr-FR-CoralieNeural',   name:'Coralie',   gender:'F', region:'fr-FR'},
+  {id:'fr-FR-EloiseNeural',    name:'Eloise',    gender:'F', region:'fr-FR'},
+  {id:'fr-FR-JacquelineNeural',name:'Jacqueline',gender:'F', region:'fr-FR'},
+  {id:'fr-FR-JeromeNeural',    name:'Jérôme',    gender:'M', region:'fr-FR'},
+  {id:'fr-FR-JosephineNeural', name:'Joséphine', gender:'F', region:'fr-FR'},
+  {id:'fr-FR-MauriceNeural',   name:'Maurice',   gender:'M', region:'fr-FR'},
+  {id:'fr-FR-RemyMultilingualNeural', name:'Rémi', gender:'M', region:'fr-FR'},
+  {id:'fr-FR-VivienneMultilingualNeural', name:'Vivienne', gender:'F', region:'fr-FR'},
+  {id:'fr-FR-YvetteNeural',    name:'Yvette',    gender:'F', region:'fr-FR'},
+  // Canada
+  {id:'fr-CA-SylvieNeural',    name:'Sylvie (CA)',  gender:'F', region:'fr-CA'},
+  {id:'fr-CA-JeanNeural',      name:'Jean (CA)',    gender:'M', region:'fr-CA'},
+  {id:'fr-CA-AntoineNeural',   name:'Antoine (CA)', gender:'M', region:'fr-CA'},
+  {id:'fr-CA-ThierryNeural',   name:'Thierry (CA)', gender:'M', region:'fr-CA'},
+  // Belgique
+  {id:'fr-BE-GerardNeural',    name:'Gérard (BE)',  gender:'M', region:'fr-BE'},
+  {id:'fr-BE-CharlineNeural',  name:'Charline (BE)',gender:'F', region:'fr-BE'},
+];
+
+let _azVoices = [...AZ_VOICES_FR]; // disponibles immédiatement sans API call
+
+function getAZKey(){ return localStorage.getItem('it.az_key') || ''; }
+function getAZRegion(){ return localStorage.getItem('it.az_region') || 'francecentral'; }
+
+function saveAZKey(){
+  const k = $('az-key').value.trim();
+  const region = $('az-region').value;
+  if(!k){ toast('Clé Azure vide'); return; }
+  localStorage.setItem('it.az_key', k);
+  localStorage.setItem('it.az_region', region);
+  $('az-key').value = '';
+  _audioCache.clear();
+  toast('✓ Clé Azure sauvegardée');
+  updateAZStatus();
+  if(S.play) TTS.autoAssign(S.play.roles);
+}
+
+function resetVoiceAssign(){
+  if(!S.play){toast('Ouvre une pièce d\'abord');return;}
+  // Vider toutes les assignations pour forcer un réassignement complet
+  S.voiceAssignments={};
+  S.voiceProfiles={};
+  TTS.autoAssign(S.play.roles);
+  toast('✓ Voix réassignées avec les sources disponibles');
+}
+function updateAZStatus(){
+  const el=$('az-status'); if(!el) return;
+  const k=getAZKey();
+  if(k){
+    el.textContent=`✓ Azure actif — ${_azVoices.length} voix FR disponibles`;
+    el.style.color='var(--green)';
+  } else {
+    el.textContent='⚠ Sans clé — Azure non actif';
+    el.style.color='var(--ink-4)';
+  }
+}
+
+async function testAZKey(){
+  const k=getAZKey(); if(!k){ toast("Entre ta clé Azure d'abord"); return; }
+  const btn=$('btn-test-az');
+  btn.textContent='…'; btn.disabled=true;
+  try{
+    const blob = await _azFetch('Bonjour, je suis Denise, voix Azure Neural.', 'fr-FR-DeniseNeural');
+    playAudioBlob(blob, ()=>{ btn.textContent='▶ Tester'; btn.disabled=false; });
+    $('az-status').textContent='✓ Fonctionne — Denise Neural';
+    $('az-status').style.color='var(--green)';
+  }catch(e){
+    btn.textContent='▶ Tester'; btn.disabled=false;
+    $('az-status').textContent='✗ '+e.message;
+    $('az-status').style.color='var(--red)';
+  }
+}
+
+async function _azFetch(text, voiceId){
+  const k=getAZKey(); if(!k) throw new Error('Pas de clé Azure');
+  const region=getAZRegion();
+  const cacheKey='az||'+voiceId+'||'+text;
+  const cached=await audioCacheGet(cacheKey);
+  if(cached) return cached;
+
+  // Utiliser le SDK Azure Speech (évite les problèmes CORS de l'API REST)
+  return new Promise((resolve, reject)=>{
+    try{
+      const SpeechSDK = window.SpeechSDK;
+      if(!SpeechSDK){ reject(new Error('SDK Azure non chargé — recharge la page')); return; }
+
+      const rate = parseFloat($('tts-speed')?.value||1);
+      const config = SpeechSDK.SpeechConfig.fromSubscription(k, region);
+      config.speechSynthesisVoiceName = voiceId;
+      config.speechSynthesisOutputFormat =
+        SpeechSDK.SpeechSynthesisOutputFormat.Audio24Khz48KBitRateMonoMp3;
+
+      const synthesizer = new SpeechSDK.SpeechSynthesizer(config, null);
+      const ssml = `<speak version='1.0' xmlns='http://www.w3.org/2001/10/synthesis' xml:lang='fr-FR'>
+        <voice name='${voiceId}'>
+          <prosody rate='${Math.round((rate-1)*100)}%'>${text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</prosody>
+        </voice>
+      </speak>`;
+
+      synthesizer.speakSsmlAsync(ssml,
+        result=>{
+          synthesizer.close();
+          if(result.reason===SpeechSDK.ResultReason.SynthesizingAudioCompleted){
+            const blob=new Blob([result.audioData],{type:'audio/mp3'});
+            audioCachePut(cacheKey,blob,true);
+            resolve(blob);
+          } else {
+            reject(new Error('Azure: '+result.errorDetails));
+          }
+        },
+        err=>{ synthesizer.close(); reject(new Error('Azure SDK: '+err)); }
+      );
+    }catch(e){ reject(e); }
+  });
+}
 
 function saveELKey(){
   const k = $('el-key').value.trim();
@@ -950,12 +1121,16 @@ async function loadELVoices(){
     const data = await r.json();
     // Garder toutes les voix et trier : French first, others after
     _elVoices = data.voices.sort((a,b)=>{
-      const aFR = (a.labels?.language||'').toLowerCase().includes('fr') ||
-                  (a.name||'').toLowerCase().includes('french');
-      const bFR = (b.labels?.language||'').toLowerCase().includes('fr') ||
-                  (b.name||'').toLowerCase().includes('french');
-      return (bFR - aFR) || a.name.localeCompare(b.name);
+      const langA=(a.labels?.language||a.labels?.accent||'').toLowerCase();
+      const langB=(b.labels?.language||b.labels?.accent||'').toLowerCase();
+      const aFR=langA.includes('fr')||langA.includes('french')||langA.includes('fran');
+      const bFR=langB.includes('fr')||langB.includes('french')||langB.includes('fran');
+      if(aFR&&!bFR)return -1;if(!aFR&&bFR)return 1;
+      return a.name.localeCompare(b.name);
     });
+    // Badge avec nb voix FR
+    const frCount=_elVoices.filter(v=>{const l=(v.labels?.language||v.labels?.accent||'').toLowerCase();return l.includes('fr')||l.includes('french');}).length;
+    const badge=$('el-badge');if(badge)badge.textContent=`(${_elVoices.length} voix · ${frCount} FR)`;
     updateELStatus();
     renderVoiceAssign();
   } catch(e){
@@ -1054,19 +1229,30 @@ const TTS={
       if(S.play&&!S.play.roles.every(r=>S.voiceAssignments[r.name]))this.autoAssign(S.play.roles);
     };
     if(window.speechSynthesis){window.speechSynthesis.onvoiceschanged=upd;[50,300,800,2000].forEach(d=>setTimeout(upd,d));}
-    updateELStatus();
+    updateELStatus();updateAZStatus();
     if(getELKey()&&!_elVoices.length){loadELVoices().then(()=>{if(S.play)this.autoAssign(S.play.roles);});}
+    const azR=$('az-region');if(azR){const r=getAZRegion();if(r)azR.value=r;}
   },
 
   async speak(text,voiceId,opts={}){
     if(!text){opts.onend?.();return;}
     this.stop();
     const lim=opts.limit&&opts.limit>0?limitText(text,opts.limit):text;
-    const k=getELKey();
-    if(k&&voiceId){
+    // 1. Azure Speech (priorité si clé configurée et voix Azure)
+    const azKey=getAZKey();
+    const isAzVoice=_azVoices.some(v=>v.id===voiceId);
+    if(azKey&&isAzVoice){
+      try{const blob=await _azFetch(lim,voiceId);this._curAudio=playAudioBlob(blob,opts.onend);return;}
+      catch(e){console.warn('Azure TTS fallback:',e.message);}
+    }
+    // 2. ElevenLabs
+    const elKey=getELKey();
+    const isELVoice=_elVoices.some(v=>v.voice_id===voiceId);
+    if(elKey&&isELVoice){
       try{const blob=await _elFetch(lim,voiceId);this._curAudio=playAudioBlob(blob,opts.onend);return;}
       catch(e){console.warn('EL TTS fallback:',e.message);}
     }
+    // 3. Fallback Web Speech API
     if(!window.speechSynthesis){opts.onend?.();return;}
     const u=new SpeechSynthesisUtterance(lim);
     const sv=this.voices.find(v=>v.name===voiceId)||this.voices[0];
@@ -1094,24 +1280,40 @@ const TTS={
   },
 
   autoAssign(roles){
+    const useAZ=getAZKey()&&_azVoices.length>0;
     const useEL=getELKey()&&_elVoices.length>0;
-    const elF=useEL?_elVoices.filter(v=>(v.labels?.gender||'').toLowerCase()==='female'):[];
-    const elM=useEL?_elVoices.filter(v=>(v.labels?.gender||'').toLowerCase()==='male'):[];
-    const elO=useEL?_elVoices.filter(v=>!['female','male'].includes((v.labels?.gender||'').toLowerCase())):[];
-    const elPool=[...elF,...elM,...elO];
+    let pool=[];
+    if(useAZ){
+      const azF=_azVoices.filter(v=>v.gender==='F');
+      const azM=_azVoices.filter(v=>v.gender==='M');
+      let fi=0,mi=0;
+      for(let i=0;i<Math.max(azF.length,azM.length)*2;i++){
+        if(i%3===1&&azM[mi])pool.push({id:azM[mi++].id,src:'az'});
+        else if(azF[fi])pool.push({id:azF[fi++].id,src:'az'});
+        else if(azM[mi])pool.push({id:azM[mi++].id,src:'az'});
+      }
+    }
+    if(useEL){
+      const elF=_elVoices.filter(v=>(v.labels?.gender||'').toLowerCase()==='female');
+      const elM=_elVoices.filter(v=>(v.labels?.gender||'').toLowerCase()==='male');
+      [...elF,...elM].forEach(v=>pool.push({id:v.voice_id,src:'el'}));
+    }
+    if(!pool.length){
+      const sys=this.voices,sysLen=Math.max(sys.length,1);
+      roles.forEach((r,i)=>{
+        if(!S.voiceAssignments[r.name])S.voiceAssignments[r.name]=sys[i%sysLen]?.name||'';
+        if(!S.voiceProfiles[r.name])S.voiceProfiles[r.name]=VOICE_PROFILES[i%VOICE_PROFILES.length];
+      });
+      saveSettings();renderVoiceAssign();return;
+    }
     const used=new Set(Object.values(S.voiceAssignments).filter(Boolean));
-    let elIdx=0;
-    const sys=this.voices,sysLen=Math.max(sys.length,1);
+    let pi=0;
     roles.forEach((r,i)=>{
       if(!S.voiceAssignments[r.name]){
-        if(useEL){
-          let v=null;
-          for(let j=elIdx;j<elPool.length;j++){if(!used.has(elPool[j].voice_id)){v=elPool[j];elIdx=j+1;break;}}
-          if(!v)v=elPool[i%Math.max(elPool.length,1)];
-          if(v){S.voiceAssignments[r.name]=v.voice_id;used.add(v.voice_id);}
-        } else {
-          S.voiceAssignments[r.name]=sys[i%sysLen]?.name||'';
-        }
+        let v=null;
+        for(let j=pi;j<pool.length;j++){if(!used.has(pool[j].id)){v=pool[j];pi=j+1;break;}}
+        if(!v)v=pool[i%pool.length];
+        if(v){S.voiceAssignments[r.name]=v.id;used.add(v.id);}
       }
       if(!S.voiceProfiles[r.name])S.voiceProfiles[r.name]=VOICE_PROFILES[i%VOICE_PROFILES.length];
     });
@@ -1434,24 +1636,25 @@ function renderMyLineOpts(){
 }
 function renderVoiceAssign(){
   const el=$('voice-assign-list');if(!el||!S.play)return;
+  const hasAZ=getAZKey()&&_azVoices.length>0;
   const hasEL=getELKey()&&_elVoices.length>0;
   const hasSys=TTS.voices.length>0;
-  if(!hasEL&&!hasSys){
-    el.innerHTML='<div style="font-size:.71rem;color:var(--ink-4);font-style:italic;padding:.3rem 0">Chargement voix…</div>';return;
-  }
+  // Construire la liste de toutes les voix disponibles
+  let allVoices=[];
+  if(hasAZ) _azVoices.forEach(v=>allVoices.push({id:v.id,label:`${v.name} [Azure FR]`,src:'az',gender:v.gender}));
+  if(hasEL) _elVoices.forEach(v=>allVoices.push({id:v.voice_id,label:v.name+' [EL]',src:'el',gender:(v.labels?.gender||'')}));
+  if(!hasAZ&&!hasEL&&hasSys) TTS.voices.forEach(v=>allVoices.push({id:v.name,label:v.name.replace(/Microsoft |Google /,'').slice(0,28)+' ['+v.lang+']',src:'sys'}));
+  if(!allVoices.length){el.innerHTML='<div style="font-size:.71rem;color:var(--ink-4);font-style:italic;padding:.3rem 0">Configure ElevenLabs ou Azure pour avoir des voix</div>';return;}
   el.innerHTML=S.play.roles.map(r=>{
     const assigned=S.voiceAssignments[r.name]||'';
-    const options=hasEL
-      ?_elVoices.map(v=>`<option value="${esc(v.voice_id)}" ${assigned===v.voice_id?'selected':''}>${esc(v.name)}</option>`).join('')
-      :TTS.voices.map(v=>`<option value="${esc(v.name)}" ${assigned===v.name?'selected':''}>${v.name.replace(/Microsoft |Google /,'').slice(0,28)} [${v.lang}]</option>`).join('');
-    const curName=hasEL
-      ?(_elVoices.find(v=>v.voice_id===assigned)?.name||'?')
-      :(TTS.voices.find(v=>v.name===assigned)?.name||'?').replace(/Microsoft |Google /,'').slice(0,22);
+    const cur=allVoices.find(v=>v.id===assigned);
+    const curLabel=cur?cur.label:'?';
+    const options=allVoices.map(v=>`<option value="${esc(v.id)}" ${assigned===v.id?'selected':''}>${esc(v.label)}</option>`).join('');
     return`<div style="margin-bottom:.65rem;padding-bottom:.55rem;border-bottom:1px solid var(--line-l)">
       <div style="display:flex;align-items:center;gap:.4rem;margin-bottom:.32rem">
         <div style="width:10px;height:10px;border-radius:50%;background:${r.color};flex-shrink:0"></div>
         <span style="font-family:'Courier Prime',monospace;font-size:.72rem;font-weight:700;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(r.name)}</span>
-        <span style="font-family:'Courier Prime',monospace;font-size:.62rem;color:var(--ink-3)">${esc(curName)}</span>
+        <span style="font-family:'Courier Prime',monospace;font-size:.6rem;color:var(--ink-4);flex-shrink:0">${cur?.src?.toUpperCase()||'?'}</span>
         <button data-preview="${esc(r.name)}" style="background:none;border:1px solid var(--line);padding:.1rem .28rem;border-radius:1px;cursor:pointer;font-size:.65rem;font-family:'Courier Prime',monospace;color:var(--ink-3);flex-shrink:0">▶</button>
       </div>
       <select class="voice-sel" data-role="${esc(r.name)}">${options}</select>
