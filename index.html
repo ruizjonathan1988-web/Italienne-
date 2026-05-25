@@ -1764,7 +1764,10 @@ async function openPlay(id){
   if(TTS.voices.length&&play.roles.some(r=>!S.voiceAssignments[r.name]))
     TTS.autoAssign(play.roles);
   if(!S._scrubInited){S._scrubInited=true;initScrubber();}
-  startSession().catch(()=>{});
+    startSession().catch(()=>{});
+
+  // Lance le préchargement silencieux des MP3 après l'ouverture
+  setTimeout(() => preloadAllAudio(), 2000);
 }
 
 // ════ SIDEBAR ════
@@ -2544,7 +2547,22 @@ async function loadHighlights(playId){
   S.highlights = {};
   if(saved?.data) Object.entries(saved.data).forEach(([k,v])=>{S.highlights[parseInt(k)]=new Set(v);});
 }
-
+async function preloadAllAudio() {
+  if (!S.play || !S.dialogues.length) return;
+  console.log('Préchargement des voix en arrière-plan...');
+  let total = S.dialogues.length;
+  let done = 0;
+  for (const d of S.dialogues) {
+    const voiceId = S.voiceAssignments[d.role];
+    if (!voiceId) continue;
+    const cacheKey = `el||${voiceId}||${d.text}`;
+    // Cette ligne va chercher le MP3 (GitHub → IndexedDB) et le mettre en cache
+    await audioCacheGet(cacheKey);
+    done++;
+    if (done % 50 === 0) console.log(`Préchargement : ${done}/${total}`);
+  }
+  console.log('✓ Toutes les voix sont prêtes');
+}
 // ════ RECONNAISSANCE VOCALE ════
 let _recoObj=null,_recoRestartCount=0;
 
