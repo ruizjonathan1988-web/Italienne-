@@ -1822,17 +1822,23 @@ function renderMyLineOpts(){
 }
 function renderVoiceAssign(){
   const el=$('voice-assign-list');if(!el||!S.play)return;
-  // Voix verrouillées — les MP3 GitHub sont liés aux assignations de DEFAULT_VOICE_ASSIGNMENTS
+   // Voix verrouillées — les MP3 GitHub sont liés aux assignations de DEFAULT_VOICE_ASSIGNMENTS
   // Afficher en lecture seule pour éviter que les utilisateurs cassent le cache
-  const voiceNames={
-    'fr-FR-DeniseNeural':'Denise','fr-FR-HenriNeural':'Henri',
-    'fr-FR-EloiseNeural':'Éloïse','fr-FR-BrigitteNeural':'Brigitte',
-    'fr-FR-CelesteNeural':'Céleste','fr-FR-ClaudeNeural':'Claude',
-    'fr-FR-CoralieNeural':'Coralie','fr-FR-JacquelineNeural':'Jacqueline',
-    'fr-FR-JeromeNeural':'Jérôme','fr-FR-JosephineNeural':'Joséphine',
-    'fr-FR-MauriceNeural':'Maurice','fr-FR-YvetteNeural':'Yvette',
-    'fr-FR-RemyMultilingualNeural':'Rémi','fr-FR-VivienneMultilingualNeural':'Vivienne',
-    'fr-CA-AntoineNeural':'Antoine (CA)','fr-CA-SylvieNeural':'Sylvie (CA)',
+  const voiceNames = {
+    'zPy2sgLU4pZ7Xrjh87uz': 'Justine',
+    'M4DbUhGmKgKUc1GsJEHY': 'Jonathan',
+    'O31r762Gb3WFygrEOGh0': 'Victoria',
+    'MmLmgmAm7pKFUJBu1Lov': 'Mélodie',
+    'obmcfXCePmPgsNsLIWIj': 'Harmonie',
+    'm5U7XCsc8v988k2RJAqN': 'Manon',
+    '1A1lOhlOFIlPyxQ8NgiG': 'Solene',
+    'ZYOBieLaunTiQrTrvNQq': 'Morgane',
+    'FvmvwvObRqIHojkEGh5N': 'Adina',
+    'KmqhNPEmmOndTBOPk4mJ': 'Lucie',
+    'Ka6yOFdNGhzFuCVW6VyO': 'Emma',
+    'BUJMBsQ3Oq4cEeWSb48y': 'Sébastien',
+    'b6nVfb3l2zshrLZTvqbs': 'Sarah',
+    'H1Y1umtVANCB20JRXWfL': 'Ruben',
   };
   el.innerHTML=`
     <div style="font-family:'Courier Prime',monospace;font-size:.6rem;color:var(--amber);background:rgba(168,112,32,.1);border:1px solid var(--amber);border-radius:2px;padding:.35rem .55rem;margin-bottom:.6rem;line-height:1.5">
