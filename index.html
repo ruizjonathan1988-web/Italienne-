@@ -1378,7 +1378,7 @@ const TTS={
     const lim = opts.limit && opts.limit > 0 ? limitText(text, opts.limit) : text;
 
     // 1. 🔥 LECTURE PRIORITAIRE DEPUIS LE CACHE ELEVENLABS
-    const cacheKeyEl = `el||${voiceId}||${lim}`;
+    const cacheKeyEl = `${voiceId}||${lim}`;
     const cachedBlob = await audioCacheGet(cacheKeyEl);
     if (cachedBlob) {
         this._curAudio = playAudioBlob(cachedBlob, opts.onend);
@@ -1400,6 +1400,7 @@ const TTS={
     // 3. Fallback : ElevenLabs direct (si clé présente)
     const elKey = getELKey();
     const isELVoice = _elVoices.some(v => v.voice_id === voiceId);
+    try{const cachedBlob=await audioCacheGet(voiceId+'||'+lim);if(cachedBlob){this._curAudio=playAudioBlob(cachedBlob,opts.onend);return;}}catch{}
     if (elKey && isELVoice) {
         try {
             const blob = await _elFetch(lim, voiceId);
