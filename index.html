@@ -1090,12 +1090,13 @@ function saveAZKey(){
 }
 
 function resetVoiceAssign(){
-  if(!S.play){toast('Ouvre une pièce d\'abord');return;}
-  // Vider toutes les assignations pour forcer un réassignement complet
-  S.voiceAssignments={};
-  S.voiceProfiles={};
-  TTS.autoAssign(S.play.roles);
-  toast('✓ Voix réassignées avec les sources disponibles');
+  if(!S.play){ toast('Ouvre une pièce d\'abord'); return; }
+  // Forcer l'utilisation des IDs ElevenLabs définis dans DEFAULT_VOICE_ASSIGNMENTS
+  S.voiceAssignments = { ...DEFAULT_VOICE_ASSIGNMENTS };
+  S.voiceProfiles = {};
+  saveSettings();
+  renderVoiceAssign();
+  toast('✓ Voix réassignées (ElevenLabs)');
 }
 // Diagnostic : teste si la première réplique du rôle est dans le cache GitHub
 async function testCache(){
