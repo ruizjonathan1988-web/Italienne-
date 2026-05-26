@@ -1340,9 +1340,19 @@ function playAudioBlob(blob, onend){
   const finish=()=>{ if(done)return; done=true; URL.revokeObjectURL(url); onend?.(); };
   audio.onended = finish;
   audio.onerror = ()=>{ console.warn('[audio onerror]',audio.error?.code); finish(); };
+  // Normalisation volume via Web Audio API
+  try{
+    const ctx=new AudioContext();
+    const src=ctx.createMediaElementSource(audio);
+    const gain=ctx.createGain();
+    gain.gain.value=1.4;
+    src.connect(gain);
+    gain.connect(ctx.destination);
+  }catch{}
   audio.play().catch(e=>{ console.error('[play rejected]',e); finish(); });
   return audio;
 }
+
 const VOICE_PROFILES=[
   {label:'Neutre',     pitch:1.0, rate:1.0},
   {label:'Grave',      pitch:0.6, rate:0.9},
