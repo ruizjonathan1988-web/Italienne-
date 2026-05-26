@@ -1336,9 +1336,11 @@ async function _elFetch(text, voiceId){
 function playAudioBlob(blob, onend){
   const url = URL.createObjectURL(blob);
   const audio = new Audio(url);
-  audio.onended = ()=>{ URL.revokeObjectURL(url); onend?.(); };
-  audio.onerror = ()=>{ URL.revokeObjectURL(url); onend?.(); };
-  audio.play().catch(e=>{ console.error('Audio play:',e); URL.revokeObjectURL(url); onend?.(); });
+  let done = false;
+  const finish = ()=>{ if(done) return; done=true; URL.revokeObjectURL(url); onend?.(); };
+  audio.onended = finish;
+  audio.onerror = finish;
+  audio.play().catch(e=>{ console.error('Audio play:',e); finish(); });
   return audio;
 }
 
