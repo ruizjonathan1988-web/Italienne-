@@ -982,7 +982,8 @@ async function audioCacheGet(key){
       await audioCachePut(key,blob,false);
       return blob;
     }
-  }catch{}
+  }catch(e){ console.error('[GH fetch] erreur:', e); }
+  // 4. Firebase Storage (si activé)
   // 4. Firebase Storage (si activé)
   if(FB_ST){
     try{
@@ -1108,7 +1109,7 @@ async function testCache(){
   const voice=S.voiceAssignments[S.myRole]||'';
   if(!voice){el.textContent='Assigne une voix Azure à ton rôle.';return;}
   el.textContent='Test en cours…';el.style.color='var(--ink-4)';
-  const cacheKey='az||'+voice+'||'+line.text;
+  const cacheKey=voice+'||'+line.text;
   const hash=await _md5(cacheKey);
   const url=`https://ruizjonathan1988-web.github.io/Italienne-/tts_cache/${hash}.mp3`;
   try{
@@ -2556,7 +2557,7 @@ async function preloadAllAudio() {
   for (const d of S.dialogues) {
     const voiceId = S.voiceAssignments[d.role];
     if (!voiceId) continue;
-    const cacheKey = `el||${voiceId}||${d.text}`;
+    const cacheKey = `${voiceId}||${d.text}`;
     // Cette ligne va chercher le MP3 (GitHub → IndexedDB) et le mettre en cache
     await audioCacheGet(cacheKey);
     done++;
