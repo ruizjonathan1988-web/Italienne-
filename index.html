@@ -3113,7 +3113,7 @@ function jeuTokenDisplay(tok, isActive){
 
   const letter = tok.first.toUpperCase();
   // Mot d'une seule lettre (j', l', d', m'...) → pas de tirets
-  const isSingle = tok.text.length <= 2;
+  const isSingle = tok.text.length <= 1;
   const blanks = isSingle ? '' : '_'.repeat(Math.max(1, Math.min(tok.text.length-1, 6)));
 
   if(isActive) return `<span class="jw-active" id="jw-active">${esc(letter)}${blanks}</span>`;
