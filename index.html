@@ -3072,8 +3072,9 @@ const QZ = {
 
 
 // ════ JEU : MÉTHODE DES LETTRES ════
-// Principe : voir toutes les initiales → dire le mot au micro → valider
-// Fallback : choisir parmi 3 mots si micro indisponible
+// Principe : voir toutes les initiales → réciter la réplique entière au micro
+// Joker : micro mot par mot si on bloque
+// Fallback : 3 choix (même initiale) si micro indispo
 const JEU = {
   lines:[], idx:0, total:0,
   words:[], wi:0,
@@ -3083,6 +3084,7 @@ const JEU = {
   active:false,
   useMic: !!(window.SpeechRecognition||window.webkitSpeechRecognition),
   _reco:null, _recoActive:false,
+  jokerMode:false, // true = micro mot par mot
 };
 
 function jeuNorm(c){
@@ -3103,16 +3105,43 @@ function jeuTokenize(text){
   return tokens;
 }
 
-// Génère 2 mots distracteurs plausibles pour le choix multiple
+// Affichage d'un token : initiale + tirets (ou juste l'initiale si mot court/apostrophe)
+function jeuTokenDisplay(tok, isActive){
+  if(tok.type==='punct') return `<span class="jw-punct">${esc(tok.text)}</span>`;
+  if(tok.state==='done') return `<span class="jw-done ok">${esc(tok.text)}</span>`;
+  if(tok.state==='fail') return `<span class="jw-done fail">${esc(tok.text)}</span>`;
+
+  const letter = tok.first.toUpperCase();
+  // Mot d'une seule lettre (j', l', d', m'...) → pas de tirets
+  const isSingle = tok.text.length <= 2;
+  const blanks = isSingle ? '' : '_'.repeat(Math.max(1, Math.min(tok.text.length-1, 6)));
+
+  if(isActive) return `<span class="jw-active" id="jw-active">${esc(letter)}${blanks}</span>`;
+  return `<span class="jw-todo">${esc(letter)}${blanks}</span>`;
+}
+
+// Génère 2 mots distracteurs commençant par la MÊME initiale
 function jeuDistractors(correctWord){
-  // Prendre des mots d'autres répliques du même rôle
+  const initial = jeuNorm(correctWord[0]);
   const pool = JEU.lines
     .flatMap(l => l.text.split(/\s+/))
-    .map(w => w.replace(/[^a-zA-ZÀ-ÿ]/g,''))
-    .filter(w => w.length > 1 && jeuNormWord(w) !== jeuNormWord(correctWord));
-  // Mélanger et prendre 2 uniques
+    .map(w => w.replace(/[^a-zA-ZÀ-ÿ''-]/g,'').replace(/['''-].*$/,'')) // garder la partie avant apostrophe
+    .filter(w =>
+      w.length > 1 &&
+      jeuNorm(w[0]) === initial &&
+      jeuNormWord(w) !== jeuNormWord(correctWord)
+    );
   const shuffled = [...new Set(pool)].sort(()=>Math.random()-.5);
-  return shuffled.slice(0,2);
+  const result = shuffled.slice(0,2);
+  // Fallback si pas assez de mots avec même initiale
+  while(result.length < 2){
+    result.push(letter => letter + '———');
+    // fallback simple : lettre + tirets
+    const fb = initial.toUpperCase() + '—'.repeat(3);
+    if(!result.includes(fb)) result.push(fb);
+    else result.push(initial.toUpperCase() + '——');
+  }
+  return result.slice(0,2);
 }
 
 function openLettres(){
@@ -3139,6 +3168,7 @@ function jeuStart(){
   JEU.lines=arr; JEU.idx=0; JEU.total=arr.length;
   JEU.lives=3; JEU.score=0; JEU.combo=0; JEU.maxCombo=0;
   JEU.linesOk=0; JEU.linesFail=0; JEU.active=true;
+  JEU.jokerMode=false;
   JEU.useMic=!!(window.SpeechRecognition||window.webkitSpeechRecognition);
   jeuLoadLine();
 }
@@ -3149,6 +3179,7 @@ function jeuLoadLine(){
   JEU.words=jeuTokenize(cur.text);
   JEU.wi=JEU.words.findIndex(w=>w.type==='word'&&w.state!=='done'&&w.state!=='fail');
   if(JEU.wi===-1) JEU.wi=0;
+  JEU.jokerMode=false;
   jeuRender();
 }
 
@@ -3161,30 +3192,50 @@ function jeuRender(){
   const comboTxt=JEU.combo>=2?`🔥 x${JEU.combo}`:'';
   const activeWord=JEU.words[JEU.wi];
 
-  // Affichage des mots : toutes les initiales visibles, mot actif surligné
-  const wordsHTML=JEU.words.map((tok,i)=>{
-    if(tok.type==='punct') return`<span class="jw-punct">${esc(tok.text)}</span>`;
-    if(tok.state==='done') return`<span class="jw-done ok">${esc(tok.text)}</span>`;
-    if(tok.state==='fail') return`<span class="jw-done fail">${esc(tok.text)}</span>`;
-    const blanks='_'.repeat(Math.max(1,Math.min(tok.text.length-1,6)));
-    if(i===JEU.wi) return`<span class="jw-active" id="jw-active">${esc(tok.first.toUpperCase())}${blanks}</span>`;
-    return`<span class="jw-todo">${esc(tok.first.toUpperCase())}${blanks}</span>`;
-  }).join('');
+  // Affichage mots — en mode joker, le mot actif est surligné
+  const wordsHTML=JEU.words.map((tok,i)=>
+    jeuTokenDisplay(tok, JEU.jokerMode && i===JEU.wi)
+  ).join('');
 
-  // Zone d'action : micro ou 3 choix
-  const actionZone = JEU.useMic ? `
-    <button id="jeu-mic-btn" onclick="jeuStartMic()"
-      style="width:72px;height:72px;border-radius:50%;background:var(--red);border:none;cursor:pointer;
-             font-size:1.8rem;display:flex;align-items:center;justify-content:center;
-             box-shadow:0 4px 16px rgba(138,24,24,.4);transition:all .2s;flex-shrink:0"
-      title="Appuie et dis le mot">
-      🎤
-    </button>
-    <div id="jeu-mic-status" style="font-family:'Courier Prime',monospace;font-size:.72rem;color:var(--ink-3);min-height:1.2rem;text-align:center">
-      Appuie sur 🎤 et dis le mot
-    </div>
-    <button class="jeu-skip-btn" onclick="jeuSwitchToChoices()">Pas de micro ? Choisir parmi 3 mots</button>
-  ` : jeuChoicesHTML(activeWord);
+  // Zone action selon le mode
+  let actionZone='';
+  if(JEU.jokerMode){
+    // Mode joker : micro ou 3 choix sur le mot actif
+    actionZone = JEU.useMic ? `
+      <div style="font-family:'Courier Prime',monospace;font-size:.72rem;color:var(--amber);text-align:center">
+        🃏 Joker — dis ce mot
+      </div>
+      <button id="jeu-mic-btn" onclick="jeuStartMic(false)"
+        style="width:64px;height:64px;border-radius:50%;background:var(--amber);border:none;cursor:pointer;
+               font-size:1.6rem;display:flex;align-items:center;justify-content:center;
+               box-shadow:0 4px 16px rgba(168,112,32,.4);transition:all .2s;flex-shrink:0">
+        🎤
+      </button>
+      <div id="jeu-mic-status" style="font-family:'Courier Prime',monospace;font-size:.72rem;color:var(--ink-3);min-height:1.2rem;text-align:center">
+        Appuie et dis le mot
+      </div>
+      <button class="jeu-skip-btn" onclick="jeuSwitchToChoices()">Choisir parmi 3 mots</button>
+    ` : jeuChoicesHTML(activeWord);
+  } else {
+    // Mode normal : micro réplique entière
+    actionZone = JEU.useMic ? `
+      <button id="jeu-mic-btn" onclick="jeuStartMic(true)"
+        style="width:72px;height:72px;border-radius:50%;background:var(--red);border:none;cursor:pointer;
+               font-size:1.8rem;display:flex;align-items:center;justify-content:center;
+               box-shadow:0 4px 16px rgba(138,24,24,.4);transition:all .2s;flex-shrink:0">
+        🎤
+      </button>
+      <div id="jeu-mic-status" style="font-family:'Courier Prime',monospace;font-size:.72rem;color:var(--ink-3);min-height:1.2rem;text-align:center">
+        Récite la réplique entière
+      </div>
+      <button class="jeu-skip-btn" onclick="jeuActivateJoker()">🃏 Joker — mot par mot</button>
+    ` : `
+      <div style="font-family:'Courier Prime',monospace;font-size:.72rem;color:var(--ink-3);text-align:center">
+        Micro non disponible
+      </div>
+      <button class="btn primary" onclick="jeuActivateJoker()" style="font-size:.85rem">🃏 Joker — mot par mot</button>
+    `;
+  }
 
   $('jeu-screen').innerHTML=`
     <div class="jeu-prog"><div class="jeu-prog-fill" style="width:${pct}%"></div></div>
@@ -3207,24 +3258,19 @@ function jeuRender(){
       <div class="jeu-line">${wordsHTML}</div>
       <div class="jeu-input-zone" style="gap:.7rem">
         ${actionZone}
-        <button class="jeu-skip-btn" onclick="jeuSkipWord()" style="margin-top:.2rem">Passer ce mot (−1 ❤️)</button>
+        <button class="jeu-skip-btn" onclick="jeuSkipLine()" style="margin-top:.2rem;color:var(--red)">Passer la réplique</button>
       </div>
     </div>
     <div style="text-align:center;font-family:'Courier Prime',monospace;font-size:.62rem;color:var(--ink-4);padding:.4rem;flex-shrink:0">
       Réplique ${JEU.idx+1}/${JEU.total} · Meilleur : ${JEU.best} pts
     </div>`;
-
-  // Input caché pour clavier physique (desktop)
-  const inp=$('jeu-input');
-  if(inp){ inp.value=''; }
 }
 
+// 3 choix avec même initiale
 function jeuChoicesHTML(activeWord){
   if(!activeWord) return '';
   const correct=activeWord.text;
   const distractors=jeuDistractors(correct);
-  // S'assurer d'avoir 2 distracteurs même si le pool est petit
-  while(distractors.length<2) distractors.push(distractors.length===0?'…':'——');
   const choices=[correct,...distractors].sort(()=>Math.random()-.5);
   return `
     <div style="font-family:'Courier Prime',monospace;font-size:.72rem;color:var(--ink-3);text-align:center">
@@ -3242,29 +3288,30 @@ function jeuChoicesHTML(activeWord){
     </div>`;
 }
 
-// Switcher vers mode 3 choix si micro refusé
+function jeuActivateJoker(){
+  JEU.jokerMode=true;
+  // Trouver le premier mot non validé
+  JEU.wi=JEU.words.findIndex(w=>w.type==='word'&&w.state==='todo');
+  if(JEU.wi===-1) JEU.wi=0;
+  jeuRender();
+}
+
 function jeuSwitchToChoices(){
   JEU.useMic=false;
   jeuRender();
 }
 
-// Valider un choix multiple
 function jeuTryChoice(chosen, correct){
-  if(jeuNormWord(chosen)===jeuNormWord(correct)){
-    jeuWordOk();
-  } else {
-    jeuWordFail();
-  }
+  if(jeuNormWord(chosen)===jeuNormWord(correct)) jeuWordOk();
+  else jeuWordFail();
 }
 
 // ── MICRO ──
-function jeuStartMic(){
+// fullLine=true → valide la réplique entière, false → valide mot par mot (joker)
+function jeuStartMic(fullLine){
   if(JEU._recoActive){ jeuStopMic(); return; }
   const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
   if(!SR){ jeuSwitchToChoices(); return; }
-
-  const activeWord=JEU.words[JEU.wi];
-  if(!activeWord) return;
 
   const btn=$('jeu-mic-btn');
   const status=$('jeu-mic-status');
@@ -3281,14 +3328,38 @@ function jeuStartMic(){
 
   r.onresult=e=>{
     JEU._recoActive=false;
-    const results=[...e.results[0]].map(a=>jeuNormWord(a.transcript));
-    const target=jeuNormWord(activeWord.text);
-    if(results.some(r=>r===target||r.includes(target)||target.includes(r))){
-      jeuWordOk();
+    if(btn){ btn.style.background='var(--red)'; btn.textContent='🎤'; }
+
+    if(fullLine){
+      // Valider la réplique entière
+      const spoken = e.results[0][0].transcript;
+      const score = jeuComparePhrase(spoken, JEU.lines[JEU.idx].text);
+      if(status) status.textContent=`"${spoken}"`;
+      if(score >= 0.75){
+        // Bonne réplique → marquer tous les mots comme done
+        JEU.words.forEach(w=>{ if(w.type==='word') w.state='done'; });
+        jeuLineOk(score);
+      } else if(score >= 0.4){
+        // Partiel → passer en joker pour les mots ratés
+        jeuMarkSpokenWords(spoken);
+        if(status) status.textContent=`${Math.round(score*100)}% — joker activé pour les mots manquants`;
+        jeuActivateJoker();
+      } else {
+        if(status) status.textContent=`Entendu : "${spoken}" — réessaie !`;
+        jeuWordFail();
+      }
     } else {
-      if(status) status.textContent=`Entendu : "${e.results[0][0].transcript}" — réessaie !`;
-      if(btn){ btn.style.background='var(--red)'; btn.textContent='🎤'; }
-      jeuWordFail();
+      // Valider mot actif seulement (joker)
+      const activeWord=JEU.words[JEU.wi];
+      if(!activeWord) return;
+      const results=[...e.results[0]].map(a=>jeuNormWord(a.transcript));
+      const target=jeuNormWord(activeWord.text);
+      if(results.some(r=>r===target||r.includes(target)||target.includes(r))){
+        jeuWordOk();
+      } else {
+        if(status) status.textContent=`Entendu : "${e.results[0][0].transcript}" — réessaie !`;
+        jeuWordFail();
+      }
     }
   };
 
@@ -3296,20 +3367,21 @@ function jeuStartMic(){
     JEU._recoActive=false;
     if(btn){ btn.style.background='var(--red)'; btn.textContent='🎤'; }
     if(e.error==='not-allowed'){
-      toast('Micro refusé — passage en mode choix');
-      jeuSwitchToChoices();
+      toast('Micro refusé — passage en mode joker');
+      JEU.useMic=false;
+      jeuActivateJoker();
     } else {
-      if(status) status.textContent='Réessaie ou choisis parmi 3 mots';
+      if(status) status.textContent='Réessaie';
     }
   };
 
   r.onend=()=>{
     JEU._recoActive=false;
-    if(btn){ btn.style.background='var(--red)'; btn.textContent='🎤'; }
+    if(btn){ btn.style.background=fullLine?'var(--red)':'var(--amber)'; btn.textContent='🎤'; }
   };
 
   try{ r.start(); }
-  catch(e){ jeuSwitchToChoices(); }
+  catch(e){ JEU.useMic=false; jeuActivateJoker(); }
 }
 
 function jeuStopMic(){
@@ -3319,10 +3391,43 @@ function jeuStopMic(){
   if(btn){ btn.style.background='var(--red)'; btn.textContent='🎤'; }
 }
 
-// ── VALIDATION MOT ──
+// Compare deux phrases mot à mot (Jaccard simplifié)
+function jeuComparePhrase(spoken, reference){
+  const sw=new Set(spoken.split(/\s+/).map(jeuNormWord).filter(Boolean));
+  const rw=reference.split(/\s+/).map(jeuNormWord).filter(Boolean);
+  if(!rw.length) return 0;
+  const matches=rw.filter(w=>sw.has(w)).length;
+  return matches/rw.length;
+}
+
+// Marque les mots prononcés comme done, laisse les autres en todo
+function jeuMarkSpokenWords(spoken){
+  const spokenSet=new Set(spoken.split(/\s+/).map(jeuNormWord).filter(Boolean));
+  JEU.words.forEach(w=>{
+    if(w.type==='word'&&w.state==='todo'){
+      if(spokenSet.has(jeuNormWord(w.text))) w.state='done';
+    }
+  });
+}
+
+// Réplique entière réussie
+function jeuLineOk(score){
+  const pts=Math.round(100*(1+Math.floor(JEU.combo/3))*(score>=0.95?1.5:1));
+  JEU.score+=pts;
+  JEU.combo++;
+  JEU.maxCombo=Math.max(JEU.maxCombo,JEU.combo);
+  JEU.linesOk++;
+  jeuFlash('green');
+  jeuRevealAll('done');
+  const cb=$('jeu-combo');
+  if(cb&&JEU.combo>=2){cb.textContent=`🔥 x${JEU.combo}`;}
+  setTimeout(()=>{JEU.idx++;jeuLoadLine();},900);
+}
+
+// ── VALIDATION MOT (joker) ──
 function jeuWordOk(){
   const word=JEU.words[JEU.wi];
-  if(!word)return;
+  if(!word) return;
   word.state='done';
   const pts=10*(1+Math.floor(JEU.combo/3));
   JEU.score+=pts;
@@ -3348,19 +3453,19 @@ function jeuWordFail(){
   jeuRender();
 }
 
-// Clavier physique (desktop) — toujours actif en fallback
+// Clavier physique desktop : première lettre du mot actif (joker uniquement)
 function jeuHandleKey(e){
-  if(!JEU.active)return;
-  if(!document.querySelector('#screen-lettres.active'))return;
-  if(['INPUT','TEXTAREA'].includes(e.target.tagName))return;
+  if(!JEU.active) return;
+  if(!document.querySelector('#screen-lettres.active')) return;
+  if(['INPUT','TEXTAREA'].includes(e.target.tagName)) return;
   if(e.key==='Enter'){jeuSkipLine();return;}
-  // En mode clavier : taper la première lettre du mot actif
+  if(!JEU.jokerMode) return; // clavier seulement en mode joker
   if(e.key.length===1&&!e.ctrlKey&&!e.metaKey){
     const word=JEU.words[JEU.wi];
-    if(!word||word.type!=='word')return;
+    if(!word||word.type!=='word') return;
     const typed=jeuNorm(e.key);
-    if(typed===word.first){ jeuWordOk(); }
-    else { jeuWordFail(); }
+    if(typed===word.first) jeuWordOk();
+    else jeuWordFail();
     e.preventDefault();
   }
 }
@@ -3372,6 +3477,7 @@ function jeuNextWord(){
     next++;
   }
   if(next>=JEU.words.length){
+    // Tous les mots validés en mode joker → réplique ok
     JEU.linesOk++;
     jeuRevealAll('done');
     const bonusPts=JEU.combo>=5?50:JEU.combo>=3?25:0;
@@ -3388,23 +3494,6 @@ function jeuNextWord(){
 function jeuRevealAll(state){
   JEU.words.forEach(w=>{if(w.type==='word'&&w.state==='todo')w.state=state;});
   jeuRender();
-}
-
-function jeuSkipWord(){
-  const word=JEU.words[JEU.wi];
-  if(!word)return;
-  jeuStopMic();
-  JEU.lives=Math.max(0,JEU.lives-1);
-  JEU.combo=0;
-  word.state='fail';
-  if(JEU.lives<=0){
-    jeuRevealAll('fail');
-    JEU.linesFail++;
-    JEU.lives=3;
-    setTimeout(()=>{JEU.idx++;jeuLoadLine();},1000);
-  } else {
-    jeuNextWord();
-  }
 }
 
 function jeuSkipLine(){
