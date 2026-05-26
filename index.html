@@ -1336,14 +1336,13 @@ async function _elFetch(text, voiceId){
 function playAudioBlob(blob, onend){
   const url = URL.createObjectURL(blob);
   const audio = new Audio(url);
-  let done = false;
-  const finish = ()=>{ if(done) return; done=true; URL.revokeObjectURL(url); onend?.(); };
+  let done=false;
+  const finish=()=>{ if(done)return; done=true; URL.revokeObjectURL(url); onend?.(); };
   audio.onended = finish;
-  audio.onerror = finish;
-  audio.play().catch(e=>{ console.error('Audio play:',e); finish(); });
+  audio.onerror = ()=>{ console.warn('[audio onerror]',audio.error?.code); finish(); };
+  audio.play().catch(e=>{ console.error('[play rejected]',e); finish(); });
   return audio;
 }
-
 const VOICE_PROFILES=[
   {label:'Neutre',     pitch:1.0, rate:1.0},
   {label:'Grave',      pitch:0.6, rate:0.9},
