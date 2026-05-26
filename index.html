@@ -2551,6 +2551,7 @@ async function loadHighlights(playId){
   if(saved?.data) Object.entries(saved.data).forEach(([k,v])=>{S.highlights[parseInt(k)]=new Set(v);});
 }
 async function preloadAllAudio() {
+  return; // désactivé — cache chargé à la demande
   if (!S.play || !S.dialogues.length) return;
   console.log('Préchargement des voix en arrière-plan...');
   let total = S.dialogues.length;
