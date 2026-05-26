@@ -4171,7 +4171,7 @@ function renderPartage(){
 }
 
 // ════ PWA + INIT ════
-if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
+if('serviceWorker' in navigator)navigator.serviceWorker.getRegistrations().then(rs=>rs.forEach(r=>r.unregister()))
 
 // Gestion bouton retour Android via popstate
 history.replaceState({screen:'library'},'','');
