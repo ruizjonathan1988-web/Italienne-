@@ -983,9 +983,9 @@ async function audioCacheGet(key){
       return blob;
     }
   }catch(e){ console.error('[GH fetch] erreur:', e); }
-  // 4. Firebase Storage (si activé)
-  // 4. Firebase Storage (si activé)
-  if(FB_ST){
+
+  // 4. Firebase Storage (désactivé — fichiers sur GitHub Pages uniquement)
+  if(false && FB_ST){
     try{
       const ref=FB_ST.ref(`tts_cache/${await _md5(key)}.mp3`);
       const url=await ref.getDownloadURL();
