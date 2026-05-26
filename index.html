@@ -1340,7 +1340,7 @@ function playAudioBlob(blob, onend){
   const finish=()=>{ if(done)return; done=true; URL.revokeObjectURL(url); onend?.(); };
   audio.onended = finish;
   audio.onerror = ()=>{ console.warn('[audio onerror]',audio.error?.code); finish(); };
-  // Normalisation volume via Web Audio API
+  // Normalisation volume via Web Audio API – avec fallback silencieux
   try{
     const ctx=new AudioContext();
     const src=ctx.createMediaElementSource(audio);
@@ -1348,11 +1348,13 @@ function playAudioBlob(blob, onend){
     gain.gain.value=1.4;
     src.connect(gain);
     gain.connect(ctx.destination);
-  }catch{}
+  }catch(e){
+    // Si Web Audio échoue (ex: Safari sans interaction), on joue normalement
+    console.log("Web Audio non disponible, lecture normale");
+  }
   audio.play().catch(e=>{ console.error('[play rejected]',e); finish(); });
   return audio;
 }
-
 const VOICE_PROFILES=[
   {label:'Neutre',     pitch:1.0, rate:1.0},
   {label:'Grave',      pitch:0.6, rate:0.9},
@@ -1787,6 +1789,8 @@ async function openPlay(id){
 function toggleSidebar(){const sb=$('play-sidebar');sb.classList.toggle('open');$('sb-overlay').classList.toggle('show',sb.classList.contains('open'));}
 function closeSidebar(){$('play-sidebar').classList.remove('open');$('sb-overlay').classList.remove('show');}
 function renderSidebar(){renderScenes();renderRoles();renderModes();renderMyLineOpts();renderVoiceAssign();updateCacheStatus();}
+
+
 
 function renderScenes(){
   if(!S.play)return;
@@ -2357,7 +2361,15 @@ function playStep(){
 }
 function setHeaderSpeaking(role){const c=S.play?.roles.find(r=>r.name===role)?.color||'#8A1818';$('play-title-hd').innerHTML=`<span style="color:${c}">${esc(role)}</span><span class="speaking-ind"><span></span><span></span><span></span></span>`;}
 function setHeaderMyTurn(msg){$('play-title-hd').innerHTML=`<span style="color:var(--amber);font-style:italic">${msg}</span>`;}
-function resetHeader(){if(S.play)$('play-title-hd').textContent=S.play.title+(S.play.author?' — '+S.play.author:'');}
+function resetHeader(){
+  if(S.play){
+    const hd = $('play-title-hd');
+    hd.innerHTML = S.play.title + (S.play.author ? ' — '+S.play.author : '');
+    // Supprimer tout speaking-ind résiduel (sécurité)
+    const oldSpk = hd.querySelector('.speaking-ind');
+    if(oldSpk) oldSpk.remove();
+  }
+}
 function hearLine(){
   const cur=S.dialogues[S.lineIdx];if(!cur)return;
   const wasPlaying=S.isPlaying;
@@ -2655,9 +2667,9 @@ function _restartReco(cur){
 
 function toggleReco(){
   if(S._recoActive){stopReco();return;}
-  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
   if(!SR){
-    toast('🎤 Micro = Chrome Android uniquement (pas Safari)');
+    toast('🎤 Reconnaissance vocale non supportée sur ce navigateur (iOS). Utilisez l\'enregistrement audio ⏺️ à la place.');
     return;
   }
   if(location.protocol==='file:'){
@@ -3077,7 +3089,6 @@ function jeuNorm(c){
 // Tokenise une réplique en mots + ponctuation
 function jeuTokenize(text){
   const tokens=[];
-  // Split en gardant la ponctuation séparée
   const parts=text.match(/[^\wÀ-ÿ'']+|[\wÀ-ÿ'']+(?:['\-][\wÀ-ÿ'']+)*/gu)||[];
   parts.forEach(p=>{
     if(/^[^\wÀ-ÿ'']+$/.test(p)) tokens.push({type:'punct',text:p});
@@ -3105,7 +3116,6 @@ function jeuStart(){
     </div>`;
     return;
   }
-  // Mélange Fisher-Yates
   const arr=[...myLines];
   for(let i=arr.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[arr[i],arr[j]]=[arr[j],arr[i]];}
   JEU.lines=arr; JEU.idx=0; JEU.total=arr.length;
@@ -3118,9 +3128,10 @@ function jeuLoadLine(){
   if(JEU.idx>=JEU.total){jeuEnd();return;}
   const cur=JEU.lines[JEU.idx];
   JEU.words=jeuTokenize(cur.text);
-  JEU.wi=JEU.words.findIndex(w=>w.type==='word');
+  // Cherche le premier mot non encore traité (état 'todo')
+  JEU.wi = JEU.words.findIndex(w => w.type==='word' && w.state !== 'done' && w.state !== 'fail');
+  if(JEU.wi === -1) JEU.wi = 0;
   jeuRender();
-  // Focus input caché pour clavier mobile
   setTimeout(()=>{ const inp=$('jeu-input'); if(inp){inp.value='';inp.focus();} },120);
 }
 
@@ -3132,7 +3143,6 @@ function jeuRender(){
   const hearts='❤️'.repeat(JEU.lives)+'🖤'.repeat(Math.max(0,3-JEU.lives));
   const comboTxt=JEU.combo>=2?`🔥 x${JEU.combo}`:'';
 
-  // Construire l'affichage des mots
   const wordsHTML=JEU.words.map((tok,i)=>{
     if(tok.type==='punct') return`<span class="jw-punct">${esc(tok.text)}</span>`;
     const blanks='_'.repeat(Math.max(2,Math.min(tok.text.length,7)));
@@ -3142,7 +3152,6 @@ function jeuRender(){
     return`<span class="jw-todo">${esc(tok.first.toUpperCase())}${blanks}</span>`;
   }).join('');
 
-  // Hint : première lettre du mot actif
   const activeWord=JEU.words[JEU.wi];
   const hintLetter=activeWord?activeWord.first.toUpperCase():'';
 
@@ -3175,7 +3184,6 @@ function jeuRender(){
       Réplique ${JEU.idx+1}/${JEU.total} · Meilleur : ${JEU.best} pts
     </div>`;
 
-  // Rebind input caché
   const inp=$('jeu-input');
   if(inp){
     inp.oninput=jeuHandleInput;
@@ -3189,17 +3197,15 @@ function jeuHandleInput(e){
   const inp=e.target;
   const typed=(inp.value||'').trim();
   if(!typed){return;}
-  inp.value=''; // reset immédiatement
+  inp.value='';
   const letter=jeuNorm(typed[typed.length-1]);
   jeuTryLetter(letter);
 }
 
-// Aussi écouter keydown sur le document pour desktop
 function jeuHandleKey(e){
   if(!JEU.active)return;
   const scr=document.querySelector('#screen-lettres.active');
   if(!scr)return;
-  // Ignorer les touches spéciales
   if(e.key.length!==1||e.ctrlKey||e.metaKey||e.altKey)return;
   const inp=$('jeu-input');
   if(document.activeElement!==inp) inp?.focus();
@@ -3213,7 +3219,6 @@ function jeuTryLetter(letter){
   if(!word||word.type!=='word')return;
 
   if(letter===word.first){
-    // ✅ Correct
     word.state='done';
     const pts=10*(1+Math.floor(JEU.combo/3));
     JEU.score+=pts;
@@ -3222,39 +3227,36 @@ function jeuTryLetter(letter){
     jeuFlash('green');
     jeuNextWord();
   } else {
-    // ❌ Mauvaise lettre
     JEU.combo=0;
     JEU.lives--;
     jeuFlash('red');
-    // Shake le mot actif
     const el=$('jw-active');
     if(el){el.classList.add('shake');setTimeout(()=>el.classList.remove('shake'),400);}
     if(JEU.lives<=0){
       jeuRevealAll('fail');
       JEU.linesFail++;
-      JEU.lives=3; // reset vies pour prochaine réplique
+      JEU.lives=3;
       setTimeout(()=>{JEU.idx++;jeuLoadLine();},1200);
       return;
     }
-    jeuRender(); // refresh hearts
+    jeuRender();
   }
 }
 
 function jeuNextWord(){
-  // Cherche le prochain mot non traité
-  let next=JEU.wi+1;
-  while(next<JEU.words.length && JEU.words[next].type!=='word') next++;
-  if(next>=JEU.words.length){
-    // Réplique terminée avec succès
+  let next = JEU.wi+1;
+  while(next < JEU.words.length && (JEU.words[next].type !== 'word' || JEU.words[next].state !== 'todo')) {
+    next++;
+  }
+  if(next >= JEU.words.length){
     JEU.linesOk++;
     jeuRevealAll('done');
-    const bonusPts=JEU.combo>=5?50:JEU.combo>=3?25:0;
-    if(bonusPts) JEU.score+=bonusPts;
+    const bonusPts = JEU.combo>=5 ? 50 : JEU.combo>=3 ? 25 : 0;
+    if(bonusPts) JEU.score += bonusPts;
     setTimeout(()=>{JEU.idx++;jeuLoadLine();},900);
   } else {
-    JEU.wi=next;
+    JEU.wi = next;
     jeuRender();
-    // Mise à jour combo badge
     const cb=$('jeu-combo');
     if(cb&&JEU.combo>=2){cb.textContent=`🔥 x${JEU.combo}`;cb.classList.add('pop');setTimeout(()=>cb.classList.remove('pop'),200);}
   }
@@ -3325,6 +3327,7 @@ function jeuEnd(){
 
 function jeuRestart(){ jeuStart(); }
 function jeuQuit(){ JEU.active=false; showScreen(S.play?'play':'library'); }
+ 
 
 // ════ ANCIEN CODE LETTRES (remplacé) ════
 // Les fonctions ci-dessous sont des stubs pour compatibilité
@@ -3635,110 +3638,15 @@ function openPartage(){
   showScreen('partage');
   renderPartage();
 }
-function renderPartage(){
-  const p=S.play;
-  const dlg=p.lines.filter(l=>l.type==='dialogue').length;
-  const prog=Math.round((S.lineIdx/Math.max(S.dialogues.length,1))*100);
-  const code=localStorage.getItem('it.session_code')||'';
-  $('partage-body').innerHTML=`
-    <div>
-      <div class="section-label">Pièce en cours</div>
-      <div style="background:var(--paper-d);padding:.7rem .9rem;border-radius:2px">
-        <div style="font-family:'IM Fell English',serif;font-size:1.05rem;margin-bottom:.25rem">${esc(p.title)}</div>
-        <div style="font-family:'Courier Prime',monospace;font-size:.68rem;color:var(--ink-3)">
-          ${dlg} répliques · ${p.roles.length} personnages · ${prog}% parcouru
-        </div>
-        <div style="margin-top:.5rem;font-size:.82rem;color:var(--ink-3)">
-          Rôle actuel : <strong>${esc(S.myRole||'—')}</strong>
-        </div>
-      </div>
-    </div>
-    <div>
-      <div class="section-label">Code de session</div>
-      <div style="font-size:.8rem;color:var(--ink-3);margin-bottom:.5rem">
-        Génère un code à partager avec ta troupe pour identifier cette session.
-      </div>
-      ${code
-        ?`<div class="session-code" onclick="copySessionCode('${code}')" title="Tap pour copier">${code}</div>
-          <div style="font-size:.72rem;color:var(--ink-4);text-align:center;font-family:'Courier Prime',monospace">Tap pour copier · <span style="cursor:pointer;color:var(--red)" onclick="generateSessionCode()">Nouveau code</span></div>`
-        :`<button class="btn primary" style="width:100%" onclick="generateSessionCode()">🎲 Générer un code</button>`
-      }
-    </div>
-    <div>
-      <div class="section-label">Rejoindre une session</div>
-      <div style="display:flex;gap:.45rem">
-        <input type="text" id="join-code-input" class="txt-input" placeholder="Ex: THÉÂTRE123" style="flex:1;text-transform:uppercase;font-family:'Courier Prime',monospace;font-size:.9rem">
-        <button class="btn primary" onclick="joinSession()">Rejoindre</button>
-      </div>
-    </div>
-    ${code?`<div style="font-family:'Courier Prime',monospace;font-size:.68rem;color:var(--ink-3);text-align:center;padding:.5rem 0">Session active : <strong>${code}</strong></div>`:''}
-  `;
-}
-function generateSessionCode(){
-  const words=['THÉÂTRE','SCÈNE','RIDEAU','ACTEUR','RAMPE','PLATEAU','COULISSE','TEXTE','RÉPLIQUE','TROUPE'];
-  const w=words[Math.floor(Math.random()*words.length)];
-  const n=Math.floor(100+Math.random()*900);
-  const code=w+n;
-  localStorage.setItem('it.session_code',code);
-  renderPartage();
-  toast('Code : '+code);
-}
 function copySessionCode(code){
   navigator.clipboard?.writeText(code).then(()=>toast('Code copié !')).catch(()=>toast(code));
 }
-function joinSession(){
-  const code=($('join-code-input')?.value||'').trim().toUpperCase();
-  if(!code){toast('Entre un code');return;}
-  localStorage.setItem('it.session_code',code);
-  toast('Session rejointe : '+code);
-  renderPartage();
-}
+
 
 // ════ OUTIL 8 : ENREGISTREMENTS ════
 function openEnregistrements(){
   showScreen('enreg');
   renderEnregistrements();
-}
-function renderEnregistrements(){
-  const list=$('enreg-list');
-  const keys=[];
-  for(let i=0;i<localStorage.length;i++){
-    const k=localStorage.key(i);
-    if(k&&k.startsWith('rec_'))keys.push(k);
-  }
-  keys.sort();
-  if(!keys.length){
-    list.innerHTML='<div style="padding:2rem;text-align:center;color:var(--ink-3)"><div style="font-size:2.5rem;margin-bottom:.6rem">🎙️</div>Aucun enregistrement<br><span style="font-size:.82rem">Enregistre tes répliques avec le bouton ⏺️</span></div>';
-    return;
-  }
-  list.innerHTML=keys.map((k,i)=>{
-    const parts=k.replace('rec_','').split('_');
-    const playId=parts.slice(0,-1).join('_');
-    const di=parts[parts.length-1];
-    const play=S.plays.find(p=>p.id===playId);
-    const playName=play?play.title:'Pièce inconnue';
-    const dlg=play?.lines.filter(l=>l.type==='dialogue')[parseInt(di)];
-    const label=dlg?`${dlg.role} : "${dlg.text.slice(0,40)}${dlg.text.length>40?'…':''}"`:('Réplique '+di);
-    return`<div style="display:flex;align-items:flex-start;gap:.55rem;padding:.65rem .7rem;border-bottom:1px solid var(--line-l)">
-      <div style="flex:1">
-        <div style="font-size:.78rem;font-family:'IM Fell English',serif">${esc(label)}</div>
-        <div style="font-size:.65rem;font-family:'Courier Prime',monospace;color:var(--ink-4);margin-top:.15rem">${esc(playName)}</div>
-      </div>
-      <button class="bb-btn" style="width:36px;height:36px;font-size:.85rem;flex-shrink:0" onclick="playEnreg('${k}')" title="Écouter">▶</button>
-      <button class="bb-btn" style="width:36px;height:36px;font-size:.85rem;flex-shrink:0" onclick="deleteEnreg('${k}')" title="Supprimer">✕</button>
-    </div>`;
-  }).join('');
-}
-function playEnreg(key){
-  const data=localStorage.getItem(key);
-  if(!data){toast('Introuvable');return;}
-  new Audio(data).play().catch(()=>toast('Impossible de lire'));
-}
-function deleteEnreg(key){
-  if(!confirm('Supprimer cet enregistrement ?'))return;
-  localStorage.removeItem(key);
-  renderEnregistrements();
-  toast('Enregistrement supprimé');
 }
 function clearAllRecordings(){
   if(!confirm('Supprimer TOUS les enregistrements ?'))return;
@@ -3748,6 +3656,7 @@ function clearAllRecordings(){
   renderEnregistrements();
   toast('Tous les enregistrements supprimés');
 }
+
 
 // ════ OUTIL 9 : GUIDE DE BIENVENUE ════
 const WELCOME_STEPS=[
@@ -3977,7 +3886,19 @@ async function fbJoinSession(code){
 
 // ════ FONCTIONS MISES À JOUR ════
 
-// saveRecording — upload Firebase en plus du localStorage
+  // fbUploadRecordingShared — chemin partagé (toute la troupe)
+async function fbUploadRecordingShared(blob, key){
+  if(!FB_ST)return null;
+  try{
+    const ref = FB_ST.ref(`shared_recordings/${key}.webm`);
+    await ref.put(blob, {contentType:'audio/webm'});
+    const url = await ref.getDownloadURL();
+    await FB.ref(`shared_recordings/${key}`).set({url, uploadedAt:Date.now(), uploadedBy:FB_UID});
+    return url;
+  }catch(e){ console.warn('fbUploadRecordingShared:', e.message); return null; }
+}
+
+// saveRecording — upload Firebase partagé en plus du localStorage
 async function saveRecording(){
   if(!S._recChunks.length)return;
   const blob=new Blob(S._recChunks,{type:'audio/webm'});
@@ -3985,18 +3906,15 @@ async function saveRecording(){
   const key=`rec_${S._recPlayId}_${di}`;
   const reader=new FileReader();
   reader.onload=async()=>{
-    // 1. Sauvegarder localement
     try{ localStorage.setItem(key,reader.result); }catch{}
-    // 2. Upload Firebase en arrière-plan
     if(FB_ST){
-      fbUploadRecording(blob,key).then(url=>{
-        if(url) toast('✓ Enregistré localement + cloud ☁');
+      fbUploadRecordingShared(blob,key).then(url=>{
+        if(url) toast('✓ Enregistré localement + cloud ☁ (partagé)');
         else toast('✓ Enregistré localement');
       });
     } else {
       toast('✓ Enregistrement sauvegardé');
     }
-    // 3. Note visuelle
     if(!S.notes[di]){
       S.notes[di]={text:'🎙 Enregistrement',color:'#87CEEB'};
       await DB.put('notes',{id:S.play.id,data:S.notes});
@@ -4004,10 +3922,9 @@ async function saveRecording(){
     }
   };
   reader.onerror=()=>{
-    // Si base64 échoue (blob trop gros) → direct Firebase
     if(FB_ST){
-      fbUploadRecording(blob,key).then(url=>{
-        if(url) toast('☁ Enregistrement sauvegardé dans le cloud');
+      fbUploadRecordingShared(blob,key).then(url=>{
+        if(url) toast('☁ Enregistrement sauvegardé dans le cloud (partagé)');
         else{ const u=URL.createObjectURL(blob);Object.assign(document.createElement('a'),{href:u,download:`replique_${di}.webm`}).click();URL.revokeObjectURL(u); }
       });
     }
@@ -4020,7 +3937,7 @@ async function renderEnregistrements(){
   const list=$('enreg-list');
   list.innerHTML='<div style="padding:1rem;text-align:center;color:var(--ink-3);font-size:.82rem">Chargement…</div>';
 
-  // Local
+
   const localKeys=[];
   for(let i=0;i<localStorage.length;i++){
     const k=localStorage.key(i);if(k?.startsWith('rec_'))localKeys.push(k);
